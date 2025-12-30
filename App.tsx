@@ -224,7 +224,7 @@ const App: React.FC = () => {
                  Border Patrol <span className={styles.primaryText}>Police Bureau</span>
                </h1>
                <p className={`text-[10px] font-bold tracking-[0.2em] uppercase ${styles.secondaryText}`}>
-                 Operational Readiness System
+                 Intelligent vehicle management system
                </p>
              </div>
           </div>
