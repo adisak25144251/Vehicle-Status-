@@ -134,18 +134,7 @@ export const AgePieChart: React.FC<ChartProps> = ({ data, theme, testId, onFilte
               backdropFilter: 'blur(16px)'
             }}
           />
-          <Legend 
-            layout="vertical" 
-            align="right" 
-            verticalAlign="middle"
-            iconType="circle"
-            wrapperStyle={{ 
-              fontSize: '12px', 
-              color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : 'inherit',
-              fontWeight: 'bold',
-              paddingLeft: '20px'
-            }} 
-          />
+          {/* Legend removed to hide age labels from the side as requested */}
         </PieChart>
       </ResponsiveContainer>
     </div>
