@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { Vehicle } from "../types";
 
@@ -47,15 +48,21 @@ export const generateFleetInsight = async (vehicles: Vehicle[]): Promise<string>
     }
 };
 
-export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[]): Promise<string> => {
+export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[]): Promise<{ text: string, links?: { title: string, uri: string }[] }> => {
     const client = createClient();
-    if (!client) return "AI Chat Unavailable.";
+    if (!client) return { text: "AI Chat Unavailable." };
+
+    const fleetSummary = contextVehicles.slice(0, 50).map(v => `${v.plate_no}: ${v.brand} ${v.vehicle_type} (${v.condition_status})`).join(', ');
 
     const systemInstruction = `
       คุณคือ "Advanced Fleet Intelligence & Governance Agent" ผู้เชี่ยวชาญการบริหารกองยานพาหนะภาครัฐ (ตชด.)
-      - ตอบด้วยภาษาราชการที่สุภาพแต่เฉลียวฉลาด
-      - เน้นความคุ้มค่าสูงสุด (3Es: Economy, Efficiency, Effectiveness)
-      - ตรวจสอบความผิดปกติและจุดเสี่ยง
+      คุณสามารถเข้าถึงข้อมูลอินเทอร์เน็ตแบบเรียลไทม์เพื่อเปรียบเทียบข้อมูลภายในกับโลกภายนอกได้
+      ข้อมูลกองยานปัจจุบันบางส่วน: [${fleetSummary}]
+      
+      แนวทางการตอบ:
+      - ตอบด้วยภาษาราชการที่สุภาพแต่ฉลาดและทันสมัย
+      - หากผู้ใช้ถามเรื่องราคากลางหรือเทคโนโลยีใหม่ ให้ใช้การค้นหาออนไลน์ประกอบ
+      - เน้นความคุ้มค่า (3Es) และความโปร่งใส
     `;
 
     try {
@@ -64,18 +71,27 @@ export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[
             contents: message,
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.3
+                temperature: 0.3,
+                tools: [{ googleSearch: {} }]
             }
         });
-        return response.text || "ขออภัยครับ ผมไม่สามารถประมวลผลคำสั่งนี้ได้ในขณะนี้";
+
+        const text = response.text || "ขออภัยครับ ผมไม่สามารถประมวลผลคำสั่งนี้ได้ในขณะนี้";
+        
+        // Extract grounding links if available
+        const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+        const links = groundingChunks?.map((chunk: any) => {
+            if (chunk.web) return { title: chunk.web.title, uri: chunk.web.uri };
+            return null;
+        }).filter(Boolean) as { title: string, uri: string }[];
+
+        return { text, links: links && links.length > 0 ? links : undefined };
     } catch (error) {
-        return "เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่ายความมั่นคง กรุณาลองใหม่ครับ";
+        console.error("Chat Error:", error);
+        return { text: "เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่ายความมั่นคง กรุณาลองใหม่ครับ" };
     }
 };
 
-/**
- * World-Class Data Extraction & Analysis for Asset Registration
- */
 export const analyzeAssetRegistration = async (vehicles: Vehicle[]): Promise<string> => {
     const client = createClient();
     if (!client) return "AI service unavailable.";
@@ -113,7 +129,7 @@ ${dataContext}
             model: "gemini-3-pro-preview",
             contents: prompt,
             config: {
-                temperature: 0.2, // Low temperature for high extraction accuracy
+                temperature: 0.2,
             }
         });
         return response.text || "การวิเคราะห์ล้มเหลว: ไม่ได้รับข้อมูลจาก AI";
@@ -123,9 +139,6 @@ ${dataContext}
     }
 };
 
-/**
- * Advanced Fleet Governance & 3Es Analysis for Dashboard Visualization
- */
 export const generateGovernanceAnalysis = async (vehicles: Vehicle[]): Promise<string> => {
     const client = createClient();
     if (!client) return "AI service unavailable.";

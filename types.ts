@@ -1,3 +1,4 @@
+
 export interface Vehicle {
   plate_no: string;
   vehicle_type: string;
@@ -13,7 +14,7 @@ export interface DashboardMetrics {
   totalCount: number;
   activeCount: number;
   maintenanceCount: number;
-  disposalCount: number; // Added specific breakdown
+  disposalCount: number;
   totalValue: number;
   utilizationRate: number;
 }
@@ -37,4 +38,5 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   timestamp: Date;
+  links?: { title: string; uri: string }[];
 }

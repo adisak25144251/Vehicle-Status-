@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { ThemeType, Vehicle, ChatMessage } from '../types';
 import { chatWithFleetAI } from '../services/geminiService';
@@ -11,7 +12,7 @@ interface AiBotProps {
 export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: '1', role: 'model', text: 'สวัสดีครับ ผมคือ Intelligence Fleet Agent ยินดีช่วยวิเคราะห์ธรรมาภิบาลและความคุ้มค่าของกองยาน ตชด. ครับ', timestamp: new Date() }
+    { id: '1', role: 'model', text: 'สวัสดีครับ ผมคือ Intelligence Fleet Agent ยินดีช่วยวิเคราะห์ธรรมาภิบาลและความคุ้มค่า พร้อมตรวจสอบข้อมูลออนไลน์แบบเรียลไทม์ให้ครับ', timestamp: new Date() }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,9 +39,15 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
     setInput('');
     setLoading(true);
 
-    const responseText = await chatWithFleetAI(textToSend, vehicles);
+    const result = await chatWithFleetAI(textToSend, vehicles);
     
-    const botMsg: ChatMessage = { id: (Date.now() + 1).toString(), role: 'model', text: responseText, timestamp: new Date() };
+    const botMsg: ChatMessage = { 
+      id: (Date.now() + 1).toString(), 
+      role: 'model', 
+      text: result.text, 
+      links: result.links,
+      timestamp: new Date() 
+    };
     setMessages(prev => [...prev, botMsg]);
     setLoading(false);
   };
@@ -50,9 +57,9 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
   };
 
   const quickActions = [
-    { label: 'จุดเสี่ยงความโปร่งใส', query: 'ช่วยวิเคราะห์จุดเสี่ยงเรื่องความโปร่งใสและความผิดปกติของข้อมูลกองยานชุดนี้' },
-    { label: 'ความคุ้มค่า 3Es', query: 'วิเคราะห์กองยานนี้ตามหลัก 3Es (Economy, Efficiency, Effectiveness)' },
-    { label: 'ปลดระวาง vs ซ่อม', query: 'มีรถคันไหนที่มีความเสี่ยงสูงควรปลดระวางมากกว่าซ่อมต่อหรือไม่?' },
+    { label: 'ราคากลางรถมือสอง', query: 'ช่วยค้นหาราคากลางรถกระบะ Toyota ปี 2015-2020 ในตลาดปัจจุบันให้หน่อย เพื่อเปรียบเทียบความคุ้มค่าการซ่อม' },
+    { label: 'เทคโนโลยี EV สีกากี', query: 'ตอนนี้หน่วยงานตำรวจต่างประเทศเริ่มใช้รถไฟฟ้าแบบไหนบ้าง และมีความคุ้มค่าอย่างไรในระยะยาว?' },
+    { label: 'ระเบียบจัดซื้อล่าสุด', query: 'ตรวจสอบระเบียบการจัดซื้อจัดจ้างยานพาหนะภาครัฐปี 2567 มีประเด็นไหนที่ต้องระวังบ้าง?' },
   ];
 
   return (
@@ -72,11 +79,11 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
               'bg-gray-800 text-white'}`}>
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isOcean ? 'bg-ocean-neon text-black' : isTactical ? 'bg-ops-green text-black' : isExecutive ? 'bg-exec-gold text-black' : 'bg-white/20'}`}>
-                <i className="fas fa-brain-circuit"></i>
+                <i className="fas fa-globe-americas"></i>
               </div>
               <div>
                 <span className="font-bold text-sm block leading-none">Intelligence Fleet Agent</span>
-                <span className="text-[10px] opacity-70">Governance & Analytics Expert</span>
+                <span className="text-[10px] opacity-70">Grounding & Real-time Analytics</span>
               </div>
             </div>
             <button onClick={() => setIsOpen(false)} className="hover:opacity-60 transition-opacity">
@@ -87,7 +94,7 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-opacity-20">
             {messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                 <div className={`
                   max-w-[85%] p-4 rounded-2xl text-sm shadow-sm leading-relaxed
                   ${msg.role === 'user' 
@@ -102,24 +109,47 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
                        isExecutive ? 'bg-exec-gold/10 text-exec-gold border border-exec-gold/30 backdrop-blur-sm' : 
                        'bg-gray-700 text-gray-200')}
                 `}>
-                  <div className="whitespace-pre-line prose prose-sm max-w-none">
+                  <div className="whitespace-pre-line prose prose-sm max-w-none mb-2">
                     {msg.text}
                   </div>
+                  
+                  {/* Grounding Links Section */}
+                  {msg.links && msg.links.length > 0 && (
+                    <div className="mt-3 pt-2 border-t border-current/10 space-y-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1">
+                        <i className="fas fa-link mr-1"></i> แหล่งข้อมูลอ้างอิง:
+                      </p>
+                      {msg.links.map((link, idx) => (
+                        <a 
+                          key={idx} 
+                          href={link.uri} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block text-[10px] underline hover:opacity-70 transition-opacity truncate max-w-full"
+                        >
+                          {link.title || link.uri}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
             {loading && (
               <div className="flex justify-start">
                 <div className={`p-4 rounded-2xl text-sm flex items-center gap-3 ${isInnovation ? 'bg-gray-100' : isOcean ? 'bg-ocean-neon/10' : isTactical ? 'bg-ops-green/10' : 'bg-gray-700'}`}>
-                  <i className={`fas fa-microchip fa-spin ${isOcean ? 'text-ocean-neon' : isTactical ? 'text-ops-green' : isExecutive ? 'text-exec-gold' : 'text-blue-400'}`}></i>
-                  <span className="opacity-60 italic">กำลังวิเคราะห์ความคุ้มค่า...</span>
+                  <div className="relative">
+                    <i className={`fas fa-search fa-spin text-xs absolute -top-1 -right-1 ${isOcean ? 'text-ocean-neon' : isTactical ? 'text-ops-green' : 'text-blue-400'}`}></i>
+                    <i className={`fas fa-globe-asia text-xl ${isOcean ? 'text-ocean-neon' : isTactical ? 'text-ops-green' : isExecutive ? 'text-exec-gold' : 'text-blue-400'}`}></i>
+                  </div>
+                  <span className="opacity-60 italic text-[11px] font-bold">AI กำลังวิเคราะห์ข้อมูลเรียลไทม์...</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Quick Actions Bar */}
-          {!loading && messages.length < 10 && (
+          {!loading && messages.length < 15 && (
             <div className="px-4 py-2 flex gap-2 overflow-x-auto custom-scrollbar no-scrollbar border-t border-white/5 bg-black/5">
                 {quickActions.map((action, i) => (
                     <button 
@@ -146,7 +176,7 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="ถามเรื่องความคุ้มค่า, TCO หรือจุดเสี่ยง..."
+                placeholder="ถามราคากลาง, ข่าวเทคโนโลยี หรือระเบียบ..."
                 className={`flex-1 px-5 py-3 rounded-xl text-sm focus:outline-none transition-all
                   ${isInnovation ? 'bg-gray-100 text-gray-800 focus:ring-2 focus:ring-blue-400' : 
                     isOcean ? 'bg-ocean-neon/5 text-ocean-neon border border-ocean-neon/30 placeholder-ocean-neon/30 focus:bg-ocean-neon/10' : 
@@ -165,7 +195,7 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
                     'bg-green-600 text-white hover:bg-green-700'}
                 `}
               >
-                <i className="fas fa-paper-plane text-sm"></i>
+                <i className="fas fa-search-location text-sm"></i>
               </button>
             </div>
           </div>
@@ -185,7 +215,7 @@ export const AiBot: React.FC<AiBotProps> = ({ vehicles, theme }) => {
         `}
       >
         <div className="relative">
-             <i className={`fas ${isOpen ? 'fa-times' : 'fa-robot-astromech'} text-2xl transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}></i>
+             <i className={`fas ${isOpen ? 'fa-times' : 'fa-satellite-dish'} text-2xl transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}></i>
              {!isOpen && <span className="absolute -top-1 -right-1 flex h-3 w-3">
                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isTactical || isOcean ? 'bg-white' : 'bg-red-400'}`}></span>
                <span className={`relative inline-flex rounded-full h-3 w-3 ${isTactical || isOcean ? 'bg-white' : 'bg-red-500'}`}></span>
