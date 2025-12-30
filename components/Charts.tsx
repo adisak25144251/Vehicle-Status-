@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -9,14 +10,15 @@ interface ChartProps {
   data: any[];
   theme: ThemeType;
   testId?: string;
+  onFilter?: (value: string) => void;
 }
 
-const COLORS_TACTICAL = ['#39FF14', '#059669', '#10B981', '#064e3b'];
-const COLORS_EXECUTIVE = ['#FFB000', '#D4AF37', '#8B4513', '#4d4d4d'];
-const COLORS_COLORFUL = ['#ff0080', '#7928ca', '#0070f3', '#10B981'];
-const COLORS_OFFICIAL = ['#2c5282', '#e53e3e', '#718096', '#cbd5e0'];
-const COLORS_INNOVATION = ['#3B82F6', '#8B5CF6', '#10B981', '#0F172A'];
-const COLORS_OCEAN = ['#00F3FF', '#00A8FF', '#00E8C6', '#004e7c'];
+const COLORS_TACTICAL = ['#39FF14', '#059669', '#10B981', '#064e3b', '#22c55e', '#16a34a'];
+const COLORS_EXECUTIVE = ['#FFB000', '#D4AF37', '#8B4513', '#4d4d4d', '#fbbf24', '#b45309'];
+const COLORS_COLORFUL = ['#ff0080', '#7928ca', '#0070f3', '#10B981', '#f59e0b', '#ec4899'];
+const COLORS_OFFICIAL = ['#2c5282', '#e53e3e', '#718096', '#cbd5e0', '#3182ce', '#38a169'];
+const COLORS_INNOVATION = ['#3B82F6', '#8B5CF6', '#10B981', '#0F172A', '#6366f1', '#a855f7'];
+const COLORS_OCEAN = ['#00F3FF', '#00A8FF', '#00E8C6', '#004e7c', '#06b6d4', '#0891b2'];
 
 const getColors = (theme: ThemeType) => {
   switch (theme) {
@@ -29,7 +31,7 @@ const getColors = (theme: ThemeType) => {
   }
 };
 
-export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId }) => {
+export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId, onFilter }) => {
   const colors = getColors(theme);
   const isModern = theme === ThemeType.INNOVATION || theme === ThemeType.OCEAN || theme === ThemeType.TACTICAL || theme === ThemeType.EXECUTIVE || theme === ThemeType.OFFICIAL;
   const isOcean = theme === ThemeType.OCEAN;
@@ -53,6 +55,8 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId }) 
             stroke={isOcean ? "rgba(0, 243, 255, 0.2)" : isTactical ? "rgba(57, 255, 20, 0.2)" : isExecutive ? "rgba(255, 176, 0, 0.2)" : isColorful ? "rgba(255, 255, 255, 0.1)" : "none"}
             animationBegin={0}
             animationDuration={1500}
+            onClick={(data) => onFilter && onFilter(data.name)}
+            style={{ cursor: 'pointer' }}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
@@ -85,7 +89,70 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId }) 
   );
 };
 
-export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId }) => {
+export const AgePieChart: React.FC<ChartProps> = ({ data, theme, testId, onFilter }) => {
+  const colors = getColors(theme);
+  const isModern = theme === ThemeType.INNOVATION || theme === ThemeType.OCEAN || theme === ThemeType.TACTICAL || theme === ThemeType.EXECUTIVE || theme === ThemeType.OFFICIAL;
+  const isOcean = theme === ThemeType.OCEAN;
+  const isTactical = theme === ThemeType.TACTICAL;
+  const isExecutive = theme === ThemeType.EXECUTIVE;
+  const isColorful = theme === ThemeType.OFFICIAL;
+  
+  return (
+    <div data-testid={testId} style={{ width: '100%', height: '100%' }}>
+      <ResponsiveContainer>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={100}
+            paddingAngle={2}
+            dataKey="value"
+            nameKey="name"
+            cornerRadius={isModern ? 12 : 0}
+            stroke={isOcean ? "rgba(0, 243, 255, 0.3)" : isTactical ? "rgba(57, 255, 20, 0.3)" : "none"}
+            animationBegin={300}
+            animationDuration={2000}
+            onClick={(data) => onFilter && onFilter(data.name)}
+            style={{ cursor: 'pointer' }}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: isModern 
+                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
+                : '#1a202c', 
+              border: isModern 
+                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
+                : 'none', 
+              borderRadius: '16px', 
+              color: '#fff',
+              backdropFilter: 'blur(16px)'
+            }}
+          />
+          <Legend 
+            layout="vertical" 
+            align="right" 
+            verticalAlign="middle"
+            iconType="circle"
+            wrapperStyle={{ 
+              fontSize: '12px', 
+              color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : 'inherit',
+              fontWeight: 'bold',
+              paddingLeft: '20px'
+            }} 
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId, onFilter }) => {
   const isOcean = theme === ThemeType.OCEAN;
   const isTactical = theme === ThemeType.TACTICAL;
   const isExecutive = theme === ThemeType.EXECUTIVE;
@@ -113,7 +180,16 @@ export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId }
       className={`transition-all duration-1000 transform ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
     >
       <ResponsiveContainer>
-        <BarChart data={data} margin={{ top: 20, right: 10, left: 10, bottom: 60 }}>
+        <BarChart 
+          data={data} 
+          margin={{ top: 20, right: 10, left: 10, bottom: 60 }}
+          onClick={(data) => {
+            if (data && data.activeLabel && onFilter) {
+              onFilter(data.activeLabel);
+            }
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <CartesianGrid 
             strokeDasharray="3 3" 
             opacity={isModern ? 0.2 : 0.1} 

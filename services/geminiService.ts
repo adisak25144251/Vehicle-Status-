@@ -51,31 +51,11 @@ export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[
     const client = createClient();
     if (!client) return "AI Chat Unavailable.";
 
-    const total = contextVehicles.length;
-    const active = contextVehicles.filter(v => v.condition_status === 'Active').length;
-    const maintenance = contextVehicles.filter(v => v.condition_status === 'Maintenance').length;
-    const dataContext = JSON.stringify(contextVehicles.slice(0, 20)); // Provide some actual data context
-
     const systemInstruction = `
       คุณคือ "Advanced Fleet Intelligence & Governance Agent" ผู้เชี่ยวชาญการบริหารกองยานพาหนะภาครัฐ (ตชด.)
-      
-      ภารกิจของคุณ:
-      1) มุ่งเน้นความคุ้มค่าสูงสุด (Value for Money - 3Es: Economy, Efficiency, Effectiveness)
-      2) สนับสนุนธรรมาภิบาลและความโปร่งใส (Good Governance)
-      3) ตรวจสอบความผิดปกติและจุดเสี่ยง (Fraud/Anomaly Detection)
-      4) วิเคราะห์ต้นทุนรวม (TCO/LCC) และจุดคุ้มทุนในการซ่อม vs จำหน่าย
-
-      บริบทปัจจุบัน:
-      - จำนวนรถทั้งหมดในระบบ: ${total} คัน
-      - สถานะ: พร้อมใช้ ${active} คัน, ชำรุด/ซ่อม ${maintenance} คัน
-      - ตัวอย่างข้อมูลบางส่วน: ${dataContext}
-
-      แนวทางการตอบ:
-      - ตอบด้วยภาษาราชการที่สุภาพแต่เฉลียวฉลาด (Professional & Insightful)
-      - หากผู้ใช้ถามเรื่องความคุ้มค่า ให้ใช้หลัก 3Es หรือ TCO มาอธิบาย
-      - หากพบความผิดปกติในคำถาม (เช่น รถเก่ามากแต่ยังซ่อมหนัก) ให้ชี้จุดเสี่ยงและเสนอมาตรการแก้ไข
-      - ใช้ Markdown (Bold, Lists, Tables) เพื่อให้ข้อมูลอ่านง่าย
-      - ห้ามเดาตัวเลขที่ไม่มีในบริบท ถ้าข้อมูลไม่พอให้ระบุว่าต้องการข้อมูลส่วนใดเพิ่ม (เช่น เลขไมล์, ประวัติซ่อม)
+      - ตอบด้วยภาษาราชการที่สุภาพแต่เฉลียวฉลาด
+      - เน้นความคุ้มค่าสูงสุด (3Es: Economy, Efficiency, Effectiveness)
+      - ตรวจสอบความผิดปกติและจุดเสี่ยง
     `;
 
     try {
@@ -84,7 +64,7 @@ export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[
             contents: message,
             config: {
                 systemInstruction: systemInstruction,
-                temperature: 0.3 // Consistency over creativity
+                temperature: 0.3
             }
         });
         return response.text || "ขออภัยครับ ผมไม่สามารถประมวลผลคำสั่งนี้ได้ในขณะนี้";
@@ -93,67 +73,94 @@ export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[
     }
 };
 
-export const generateGovernanceAnalysis = async (vehicles: Vehicle[]): Promise<string> => {
+/**
+ * World-Class Data Extraction & Analysis for Asset Registration
+ */
+export const analyzeAssetRegistration = async (vehicles: Vehicle[]): Promise<string> => {
     const client = createClient();
-    if (!client) return "Error: API Key missing.";
+    if (!client) return "AI service unavailable.";
 
-    const dataContext = JSON.stringify(vehicles.map(v => ({
-        ...v,
-        age: new Date().getFullYear() - (v.purchase_year || 2020)
-    })));
+    const dataContext = JSON.stringify(vehicles);
 
-    const expertPrompt = `
-    คุณคือ “Fleet Analytics & Governance Expert (ภาครัฐ)” ผู้เชี่ยวชาญการวิเคราะห์ข้อมูลเพื่อบริหารยานพาหนะทางราชการ
-    
-    เป้าหมาย:
-    - สรุปสถานภาพกองยาน (Fleet Health)
-    - ลดต้นทุนรวมตลอดอายุการใช้งาน (TCO/LCC) และเพิ่ม Value for Money (3Es)
-    - สร้างระบบควบคุมภายใน + Audit Trail
-    - ชี้จุดเสี่ยง (Risk/Fraud)
+    const prompt = `
+บทบาท: คุณคือ “World-Class Data Extraction + AI/ML Architect + Thai Language Editor (Gov/Business Grade)”
+ภารกิจ: รับไฟล์/ข้อความ (JSON ตาราง) แล้วสกัดข้อมูล → ทำความสะอาด → จัดหมวดหมู่ → สร้างตารางมาตรฐาน → ตรวจสอบความถูกต้อง/ความครบถ้วน → แก้ภาษาไทยอัตโนมัติ → ออกแบบแผน AI/ML ขั้นสูง พร้อมรายงานแบบมืออาชีพ
 
-    Input Data (JSON):
-    ${dataContext}
+ข้อกำหนดเคร่งครัด (ห้ามละเมิด):
+1) ห้ามเดา/ห้ามเติมข้อมูลเอง: ถ้าไม่มีหลักฐานในไฟล์ ต้องระบุว่า “ไม่พบข้อมูลในไฟล์” และใส่รายการคำถาม/ข้อมูลที่ต้องเพิ่ม
+2) ทุกค่าที่สกัด (ตัวเลข/ชื่อ/วันที่/สถานะ) ต้องมีหลักฐานอ้างอิง (evidence)
+3) แก้ภาษาไทยอัตโนมัติ: สะกด, เว้นวรรค, คำทับศัพท์, รูปแบบราชการ/ธุรกิจ ให้ถูกต้องและสม่ำเสมอ โดยห้ามเปลี่ยนความหมายเดิม
+4) จัดหมวดหมู่ข้อมูลเป็น “Data Domains”: Master data, Transaction/Events, Finance/Budget, Status/Workflow, Documents/References
 
-    งานที่ต้องทำ (Output Requirements):
-    1. Data Understanding & Quality Report
-    2. Fleet Overview & Utilization Analysis
-    3. Cost & Value for Money (3Es Analysis)
-    4. Maintenance & Reliability Strategy
-    5. Risk / Anomaly / Compliance Check
-    6. Optimization Recommendations
+ข้อมูลอินพุตสำหรับประมวลผล:
+${dataContext}
 
-    รูปแบบการตอบ (Response Format):
-    ส่วนที่ 1: รายงานภาษาไทยแบบผู้บริหาร (Markdown format)
-    - ใช้หัวข้อชัดเจน Bullet points
-    - สรุปตัวเลขสำคัญ (คำนวณจริงจาก Input Data เท่านั้น ห้ามมั่วตัวเลข)
-    - ข้อเสนอแนะเชิงนโยบาย
+เอาต์พุตที่ต้องการ (ต้องส่งออกครบ 8 ส่วน):
+1) normalized_tables (สรุปรายการตารางทั้งหมด)
+2) tables (แสดงอย่างน้อย “ตัวอย่าง 10 แถวแรก” ต่อหนึ่งตารางสำคัญ)
+3) evidence_map (ตัวอย่างหลักฐานอ้างอิงแบบเป็นระบบ)
+4) data_dictionary (ชื่อคอลัมน์ไทย/อังกฤษ, type, unit, description)
+5) data_quality_report + quality_score (0-100 พร้อมเหตุผล)
+6) business_summary (ภาษาไทยทางการ อ่านง่าย)
+7) ml_roadmap (แผนงาน AI/ML ระยะสั้น/กลาง/ยาว สำหรับข้อมูลชุดนี้)
+8) learning_notes (สิ่งที่เรียนรู้จากไฟล์ชุดนี้ + ข้อเสนอแนะเพื่อทำรอบถัดไปให้แม่นขึ้น)
 
-    ส่วนที่ 2: dashboard_spec (JSON format)
-    - สร้าง JSON Object สำหรับออกแบบ Dashboard ตามโครงสร้าง:
-      {
-        "pages": [...],
-        "global_filters": [...],
-        "metrics": [...],
-        "charts": [...],
-        "alerts": [...],
-        "audit_log": [...]
-      }
-    - ต้องอยู่ใน Code Block \`\`\`json ... \`\`\` เท่านั้น
-
-    วิเคราะห์ข้อมูลเดี๋ยวนี้ โดยเน้นความถูกต้องและธรรมาภิบาล
+รูปแบบการส่งออก: ใช้ Markdown ที่อ่านง่ายและคัดลอกไปทำงานต่อได้ทันที
     `;
 
     try {
         const response = await client.models.generateContent({
             model: "gemini-3-pro-preview",
-            contents: expertPrompt,
+            contents: prompt,
             config: {
-                temperature: 0.2,
+                temperature: 0.2, // Low temperature for high extraction accuracy
             }
         });
-        return response.text || "Analysis failed.";
+        return response.text || "การวิเคราะห์ล้มเหลว: ไม่ได้รับข้อมูลจาก AI";
+    } catch (error) {
+        console.error("Asset Analysis Error:", error);
+        return "เกิดข้อผิดพลาดในการประมวลผลข้อมูลทะเบียนรถอัจฉริยะ";
+    }
+};
+
+/**
+ * Advanced Fleet Governance & 3Es Analysis for Dashboard Visualization
+ */
+export const generateGovernanceAnalysis = async (vehicles: Vehicle[]): Promise<string> => {
+    const client = createClient();
+    if (!client) return "AI service unavailable.";
+
+    const dataContext = JSON.stringify(vehicles);
+
+    const prompt = `
+คุณคือ "Chief Governance & Fleet Auditor (Expert level)"
+ภารกิจ: วิเคราะห์ธรรมาภิบาลกองยานพาหนะ (ตชด.) ตามหลัก 3Es (Economy, Efficiency, Effectiveness)
+
+ข้อมูลอินพุต (JSON):
+${dataContext}
+
+ความต้องการ:
+1) วิเคราะห์ความคุ้มค่า (Value for Money) และประเมินต้นทุนรวม (TCO)
+2) ตรวจสอบความผิดปกติหรือความเสี่ยงด้านธรรมาภิบาล
+3) ให้ข้อเสนอแนะเชิงกลยุทธ์
+4) สร้างโครงสร้าง JSON สำหรับทำ Dashboard (บรรจุใน Markdown Code Block แบบ json) ซึ่งประกอบด้วย metrics สำคัญ เช่น tco_estimate, efficiency_score, risk_level
+
+เอาต์พุต:
+- รายงานสรุปภาษาไทยแบบทางการ (Markdown)
+- Dashboard Spec ในรูปแบบ JSON Code Block ( \`\`\`json ... \`\`\` )
+    `;
+
+    try {
+        const response = await client.models.generateContent({
+            model: "gemini-3-pro-preview",
+            contents: prompt,
+            config: {
+                temperature: 0.4,
+            }
+        });
+        return response.text || "การวิเคราะห์ธรรมาภิบาลล้มเหลว";
     } catch (error) {
         console.error("Governance Analysis Error:", error);
-        return "System Error: Unable to perform governance analysis.";
+        return "เกิดข้อผิดพลาดในการวิเคราะห์ธรรมาภิบาล";
     }
 };
