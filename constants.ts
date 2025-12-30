@@ -20,23 +20,23 @@ export const MOCK_VEHICLES: Vehicle[] = [
 
 export const THEME_CONFIG = {
   [ThemeType.EXECUTIVE]: {
-    name: "Premium Gold Neon",
-    bgClass: "bg-[#050505]",
-    textClass: "text-exec-gold drop-shadow-md",
-    cardClass: "bg-exec-gold/10 backdrop-blur-md border border-exec-gold/40 shadow-[0_0_20px_rgba(255,176,0,0.15)] rounded-xl",
-    primaryText: "text-exec-gold drop-shadow-[0_0:5px_rgba(255,176,0,0.8)]",
+    name: "Clear Glass Neon 3D",
+    bgClass: "bg-[#020205]",
+    textClass: "text-exec-gold drop-shadow-[0_0_2px_rgba(255,176,0,0.5)]",
+    cardClass: "bg-white/5 backdrop-blur-[20px] border border-white/20 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.2)] rounded-[2rem] transition-all hover:bg-white/10 hover:-translate-y-1",
+    primaryText: "text-exec-gold drop-shadow-[0_0_10px_rgba(255,176,0,0.8)]",
     secondaryText: "text-exec-gold/70",
-    accentBorder: "border-exec-gold",
+    accentBorder: "border-exec-gold/40",
     font: "font-sans"
   },
   [ThemeType.OFFICIAL]: {
-    name: "Government Official",
-    bgClass: "bg-official-bg",
-    textClass: "text-official-text",
-    cardClass: "bg-official-card border border-official-border shadow-sm rounded-lg",
-    primaryText: "text-official-primary",
-    secondaryText: "text-official-secondary",
-    accentBorder: "border-official-primary",
+    name: "Abstract Colorful Neon 3D",
+    bgClass: "bg-[#0a0a0f]",
+    textClass: "text-white/90 drop-shadow-md",
+    cardClass: "bg-white/5 backdrop-blur-[24px] border border-white/10 shadow-[0_20px_40px_rgba(0,0,0,0.4),inset_0_0_20px_rgba(255,255,255,0.05)] rounded-[2.5rem] transition-all duration-500 hover:scale-[1.02] hover:border-white/30",
+    primaryText: "text-transparent bg-clip-text bg-gradient-to-r from-[#ff0080] via-[#7928ca] to-[#0070f3] font-black",
+    secondaryText: "text-white/60 font-medium tracking-wider",
+    accentBorder: "border-[#7928ca]/50",
     font: "font-sans"
   },
   [ThemeType.TACTICAL]: {

@@ -13,6 +13,7 @@ interface ChartProps {
 
 const COLORS_TACTICAL = ['#39FF14', '#059669', '#10B981', '#064e3b'];
 const COLORS_EXECUTIVE = ['#FFB000', '#D4AF37', '#8B4513', '#4d4d4d'];
+const COLORS_COLORFUL = ['#ff0080', '#7928ca', '#0070f3', '#10B981'];
 const COLORS_OFFICIAL = ['#2c5282', '#e53e3e', '#718096', '#cbd5e0'];
 const COLORS_INNOVATION = ['#3B82F6', '#8B5CF6', '#10B981', '#0F172A'];
 const COLORS_OCEAN = ['#00F3FF', '#00A8FF', '#00E8C6', '#004e7c'];
@@ -23,16 +24,18 @@ const getColors = (theme: ThemeType) => {
     case ThemeType.EXECUTIVE: return COLORS_EXECUTIVE;
     case ThemeType.INNOVATION: return COLORS_INNOVATION;
     case ThemeType.OCEAN: return COLORS_OCEAN;
+    case ThemeType.OFFICIAL: return COLORS_COLORFUL;
     default: return COLORS_OFFICIAL;
   }
 };
 
 export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId }) => {
   const colors = getColors(theme);
-  const isModern = theme === ThemeType.INNOVATION || theme === ThemeType.OCEAN || theme === ThemeType.TACTICAL || theme === ThemeType.EXECUTIVE;
+  const isModern = theme === ThemeType.INNOVATION || theme === ThemeType.OCEAN || theme === ThemeType.TACTICAL || theme === ThemeType.EXECUTIVE || theme === ThemeType.OFFICIAL;
   const isOcean = theme === ThemeType.OCEAN;
   const isTactical = theme === ThemeType.TACTICAL;
   const isExecutive = theme === ThemeType.EXECUTIVE;
+  const isColorful = theme === ThemeType.OFFICIAL;
   
   return (
     <div data-testid={testId} style={{ width: '100%', height: 200 }}>
@@ -46,8 +49,8 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId }) 
             outerRadius={isModern ? 65 : 60}
             paddingAngle={5}
             dataKey="value"
-            cornerRadius={isModern ? 4 : 0}
-            stroke={isOcean ? "rgba(0, 243, 255, 0.2)" : isTactical ? "rgba(57, 255, 20, 0.2)" : isExecutive ? "rgba(255, 176, 0, 0.2)" : "none"}
+            cornerRadius={isModern ? 8 : 0}
+            stroke={isOcean ? "rgba(0, 243, 255, 0.2)" : isTactical ? "rgba(57, 255, 20, 0.2)" : isExecutive ? "rgba(255, 176, 0, 0.2)" : isColorful ? "rgba(255, 255, 255, 0.1)" : "none"}
             animationBegin={0}
             animationDuration={1500}
           >
@@ -58,13 +61,13 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId }) 
           <Tooltip 
             contentStyle={{ 
               backgroundColor: isModern 
-                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : 'rgba(255,255,255,0.98)') 
+                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
                 : '#1a202c', 
               border: isModern 
-                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : '1px solid #ddd') 
+                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
                 : 'none', 
-              borderRadius: '12px', 
-              color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : '#000',
+              borderRadius: '16px', 
+              color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : '#000',
               backdropFilter: isModern ? 'blur(16px)' : 'none',
               boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
             }}
@@ -73,7 +76,7 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId }) 
           <Legend wrapperStyle={{ 
             paddingTop: '15px', 
             fontSize: '11px', 
-            color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : 'inherit',
+            color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : 'inherit',
             fontWeight: 'bold'
           }} />
         </PieChart>
@@ -86,7 +89,8 @@ export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId }
   const isOcean = theme === ThemeType.OCEAN;
   const isTactical = theme === ThemeType.TACTICAL;
   const isExecutive = theme === ThemeType.EXECUTIVE;
-  const isModern = isOcean || isTactical || isExecutive || theme === ThemeType.INNOVATION;
+  const isColorful = theme === ThemeType.OFFICIAL;
+  const isModern = isOcean || isTactical || isExecutive || isColorful || theme === ThemeType.INNOVATION;
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -94,12 +98,12 @@ export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId }
     return () => clearTimeout(timer);
   }, []);
 
-  const themeTickColor = isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : '#4b5563';
+  const themeTickColor = isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : '#4b5563';
 
   const STATUS_COLORS = {
-    'ใช้การได้': isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isOcean ? '#00F3FF' : '#10b981',
-    'ชำรุด': '#facc15',
-    'รอจำหน่าย': '#ef4444'
+    'ใช้การได้': isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isOcean ? '#00F3FF' : isColorful ? '#0070f3' : '#10b981',
+    'ชำรุด': isColorful ? '#facc15' : '#facc15',
+    'รอจำหน่าย': isColorful ? '#ff0080' : '#ef4444'
   };
 
   return (
@@ -137,20 +141,21 @@ export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId }
             cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
             contentStyle={{ 
               backgroundColor: isModern 
-                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : 'rgba(255,255,255,0.98)') 
+                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
                 : '#fff', 
               border: isModern 
-                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : '1px solid #ddd') 
+                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
                 : '1px solid #ccc', 
-              borderRadius: '12px',
+              borderRadius: '16px',
               fontWeight: 'bold',
-              color: 'inherit'
+              color: 'inherit',
+              backdropFilter: 'blur(10px)'
             }}
           />
-          <Legend iconType="circle" wrapperStyle={{ paddingTop: '40px', fontWeight: 'bold' }} />
+          <Legend iconType="circle" wrapperStyle={{ paddingTop: '40px', fontWeight: 'bold', color: themeTickColor }} />
           <Bar dataKey="ใช้การได้" stackId="a" fill={STATUS_COLORS['ใช้การได้']} radius={[0, 0, 0, 0]} animationDuration={1500} barSize={40} />
           <Bar dataKey="ชำรุด" stackId="a" fill={STATUS_COLORS['ชำรุด']} radius={[0, 0, 0, 0]} animationDuration={1500} barSize={40} />
-          <Bar dataKey="รอจำหน่าย" stackId="a" fill={STATUS_COLORS['รอจำหน่าย']} radius={[4, 4, 0, 0]} animationDuration={1500} barSize={40} />
+          <Bar dataKey="รอจำหน่าย" stackId="a" fill={STATUS_COLORS['รอจำหน่าย']} radius={[8, 8, 0, 0]} animationDuration={1500} barSize={40} />
         </BarChart>
       </ResponsiveContainer>
     </div>
