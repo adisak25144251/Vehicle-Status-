@@ -130,15 +130,20 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClos
         const plate = getVal('plate_no');
 
         if (plate && String(plate).trim() !== '') {
+            const rawYear = Number(String(getVal('purchase_year') || '').replace(/[^0-9]/g, ''));
+            // Normalize Year: If BE (> 2400) convert to AD
+            const currentYear = new Date().getFullYear();
+            const normalizedYear = (rawYear > 2400) ? rawYear - 543 : (rawYear || currentYear);
+
             newVehicles.push({
-                plate_no: String(plate),
-                vehicle_type: String(getVal('vehicle_type') || "ยานพาหนะทั่วไป"),
-                brand: String(getVal('brand') || "ไม่ระบุยี่ห้อ"),
-                engine_no: String(getVal('engine_no') || "-"),
-                asset_value: Number(String(getVal('asset_value')).replace(/[^0-9.]/g, '')) || 0,
-                department: String(getVal('department') || "ไม่ระบุหน่วยงาน"),
+                plate_no: String(plate).trim(),
+                vehicle_type: String(getVal('vehicle_type') || "ยานพาหนะทั่วไป").trim(),
+                brand: String(getVal('brand') || "ไม่ระบุยี่ห้อ").trim(),
+                engine_no: String(getVal('engine_no') || "-").trim(),
+                asset_value: Number(String(getVal('asset_value') || '0').replace(/[^0-9.]/g, '')) || 0,
+                department: String(getVal('department') || "ไม่ระบุหน่วยงาน").trim(),
                 condition_status: mapStatus(getVal('condition_status')),
-                purchase_year: Number(String(getVal('purchase_year')).replace(/[^0-9]/g, '')) || new Date().getFullYear() + 543
+                purchase_year: normalizedYear
             });
         }
     });

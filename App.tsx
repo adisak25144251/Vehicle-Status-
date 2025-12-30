@@ -55,14 +55,14 @@ const App: React.FC = () => {
   const isColorful = theme === ThemeType.OFFICIAL;
 
   // Clear All Filters Helper
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setFilterDept('All');
     setFilterType('All');
     setFilterStatus('All');
     setFilterAgeMin('');
     setFilterAgeMax('');
     setSearchTerm('');
-  };
+  }, []);
 
   const isAnyFilterActive = useMemo(() => {
     return filterDept !== 'All' || filterType !== 'All' || filterStatus !== 'All' || filterAgeMin !== '' || filterAgeMax !== '' || searchTerm !== '';
@@ -72,7 +72,10 @@ const App: React.FC = () => {
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
       const currentYear = new Date().getFullYear();
-      const serviceAge = v.purchase_year ? currentYear - v.purchase_year : 0;
+      // Age calculation logic: handle both AD and BE years just in case
+      const vYear = v.purchase_year || currentYear;
+      const normalizedVYear = vYear > 2400 ? vYear - 543 : vYear;
+      const serviceAge = currentYear - normalizedVYear;
 
       const matchDept = filterDept === 'All' || v.department === filterDept;
       const matchType = filterType === 'All' || v.vehicle_type === filterType;
@@ -92,7 +95,7 @@ const App: React.FC = () => {
           if (!statusMap[filterStatus] && currentStatus !== filterStatus) return false;
       }
 
-      const minAge = filterAgeMin === '' ? 0 : parseInt(filterAgeMin);
+      const minAge = filterAgeMin === '' ? -Infinity : parseInt(filterAgeMin);
       const maxAge = filterAgeMax === '' ? Infinity : parseInt(filterAgeMax);
       const matchYears = serviceAge >= minAge && serviceAge <= maxAge;
 
@@ -140,7 +143,9 @@ const App: React.FC = () => {
     const ageMap: Record<string, number> = {};
     
     filteredVehicles.forEach(v => {
-      const age = currentYear - (v.purchase_year || currentYear);
+      const vYear = v.purchase_year || currentYear;
+      const normalizedVYear = vYear > 2400 ? vYear - 543 : vYear;
+      const age = currentYear - normalizedVYear;
       const label = `${age} ปี`;
       ageMap[label] = (ageMap[label] || 0) + 1;
     });
@@ -178,6 +183,8 @@ const App: React.FC = () => {
 
   const handleUpload = (newVehicles: Vehicle[]) => {
     setVehicles(newVehicles);
+    clearAllFilters(); // Reset filters so new data is visible immediately
+    setCurrentView('dashboard'); // Switch to dashboard to show result
   };
 
   // Interactive Filter Handlers
