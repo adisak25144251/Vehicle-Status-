@@ -17,8 +17,17 @@ const COLORS_TACTICAL = ['#39FF14', '#059669', '#10B981', '#064e3b', '#22c55e', 
 const COLORS_EXECUTIVE = ['#FFB000', '#D4AF37', '#8B4513', '#4d4d4d', '#fbbf24', '#b45309'];
 const COLORS_COLORFUL = ['#ff0080', '#7928ca', '#0070f3', '#10B981', '#f59e0b', '#ec4899'];
 const COLORS_OFFICIAL = ['#2c5282', '#e53e3e', '#718096', '#cbd5e0', '#3182ce', '#38a169'];
-const COLORS_INNOVATION = ['#3B82F6', '#8B5CF6', '#10B981', '#0F172A', '#6366f1', '#a855f7'];
+// Cyberpunk Palette: Neon Pink, Cyan, Electric Purple, Neon Green
+const COLORS_INNOVATION = ['#D946EF', '#06B6D4', '#8B5CF6', '#F472B6', '#22D3EE', '#A78BFA'];
 const COLORS_OCEAN = ['#00F3FF', '#00A8FF', '#00E8C6', '#004e7c', '#06b6d4', '#0891b2'];
+
+// Define colors specifically for age groups to ensure consistent semantic meaning
+const AGE_GROUP_COLORS: Record<string, string> = {
+  'ไม่เกิน 5 ปี': '#10B981', // Green (Good/New)
+  '6-10 ปี': '#00F3FF',     // Cyan (Mid-Life)
+  '11-15 ปี': '#F59E0B',    // Orange (Aging)
+  '16 ปีขึ้นไป': '#EF4444'   // Red (Old/Critical)
+};
 
 const getColors = (theme: ThemeType) => {
   switch (theme) {
@@ -38,6 +47,7 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId, on
   const isTactical = theme === ThemeType.TACTICAL;
   const isExecutive = theme === ThemeType.EXECUTIVE;
   const isColorful = theme === ThemeType.OFFICIAL;
+  const isInnovation = theme === ThemeType.INNOVATION;
   
   return (
     <div data-testid={testId} style={{ width: '100%', height: 200 }}>
@@ -52,7 +62,7 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId, on
             paddingAngle={5}
             dataKey="value"
             cornerRadius={isModern ? 8 : 0}
-            stroke={isOcean ? "rgba(0, 243, 255, 0.2)" : isTactical ? "rgba(57, 255, 20, 0.2)" : isExecutive ? "rgba(255, 176, 0, 0.2)" : isColorful ? "rgba(255, 255, 255, 0.1)" : "none"}
+            stroke={isInnovation ? "rgba(217, 70, 239, 0.2)" : isOcean ? "rgba(0, 243, 255, 0.2)" : isTactical ? "rgba(57, 255, 20, 0.2)" : isExecutive ? "rgba(255, 176, 0, 0.2)" : isColorful ? "rgba(255, 255, 255, 0.1)" : "none"}
             animationBegin={0}
             animationDuration={1500}
             onClick={(data) => onFilter && onFilter(data.name)}
@@ -65,13 +75,13 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId, on
           <Tooltip 
             contentStyle={{ 
               backgroundColor: isModern 
-                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
+                ? (isInnovation ? 'rgba(5, 1, 16, 0.9)' : isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
                 : '#1a202c', 
               border: isModern 
-                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
+                ? (isInnovation ? '1px solid #D946EF' : isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
                 : 'none', 
               borderRadius: '16px', 
-              color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : '#000',
+              color: isInnovation ? '#D946EF' : isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : '#000',
               backdropFilter: isModern ? 'blur(16px)' : 'none',
               boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
             }}
@@ -80,7 +90,7 @@ export const StatusDonutChart: React.FC<ChartProps> = ({ data, theme, testId, on
           <Legend wrapperStyle={{ 
             paddingTop: '15px', 
             fontSize: '11px', 
-            color: isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : 'inherit',
+            color: isInnovation ? '#06B6D4' : isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : 'inherit',
             fontWeight: 'bold'
           }} />
         </PieChart>
@@ -96,6 +106,9 @@ export const AgePieChart: React.FC<ChartProps> = ({ data, theme, testId, onFilte
   const isTactical = theme === ThemeType.TACTICAL;
   const isExecutive = theme === ThemeType.EXECUTIVE;
   const isColorful = theme === ThemeType.OFFICIAL;
+  const isInnovation = theme === ThemeType.INNOVATION;
+  
+  const themeTickColor = isInnovation ? '#06B6D4' : isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : 'inherit';
   
   return (
     <div data-testid={testId} style={{ width: '100%', height: '100%' }}>
@@ -111,30 +124,45 @@ export const AgePieChart: React.FC<ChartProps> = ({ data, theme, testId, onFilte
             dataKey="value"
             nameKey="name"
             cornerRadius={isModern ? 12 : 0}
-            stroke={isOcean ? "rgba(0, 243, 255, 0.3)" : isTactical ? "rgba(57, 255, 20, 0.3)" : "none"}
+            stroke={isInnovation ? "rgba(217, 70, 239, 0.3)" : isOcean ? "rgba(0, 243, 255, 0.3)" : isTactical ? "rgba(57, 255, 20, 0.3)" : "none"}
             animationBegin={300}
             animationDuration={2000}
             onClick={(data) => onFilter && onFilter(data.name)}
             style={{ cursor: 'pointer' }}
           >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-            ))}
+            {data.map((entry, index) => {
+              // Check if we have a specific color for this group name
+              const specificColor = AGE_GROUP_COLORS[entry.name];
+              return (
+                <Cell 
+                    key={`cell-${index}`} 
+                    fill={specificColor || colors[index % colors.length]} 
+                />
+              );
+            })}
           </Pie>
           <Tooltip 
             contentStyle={{ 
               backgroundColor: isModern 
-                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
+                ? (isInnovation ? 'rgba(5, 1, 16, 0.9)' : isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
                 : '#1a202c', 
               border: isModern 
-                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
+                ? (isInnovation ? '1px solid #D946EF' : isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
                 : 'none', 
               borderRadius: '16px', 
               color: '#fff',
               backdropFilter: 'blur(16px)'
             }}
           />
-          {/* Legend removed to hide age labels from the side as requested */}
+          <Legend 
+             wrapperStyle={{ 
+                paddingTop: '20px', 
+                fontSize: '11px', 
+                fontWeight: 'bold',
+                color: themeTickColor
+             }} 
+             iconType="circle"
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>
@@ -146,7 +174,8 @@ export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId, 
   const isTactical = theme === ThemeType.TACTICAL;
   const isExecutive = theme === ThemeType.EXECUTIVE;
   const isColorful = theme === ThemeType.OFFICIAL;
-  const isModern = isOcean || isTactical || isExecutive || isColorful || theme === ThemeType.INNOVATION;
+  const isInnovation = theme === ThemeType.INNOVATION;
+  const isModern = isOcean || isTactical || isExecutive || isColorful || isInnovation;
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -154,10 +183,10 @@ export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId, 
     return () => clearTimeout(timer);
   }, []);
 
-  const themeTickColor = isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : '#4b5563';
+  const themeTickColor = isInnovation ? '#06B6D4' : isOcean ? '#00F3FF' : isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isColorful ? '#fff' : '#4b5563';
 
   const STATUS_COLORS = {
-    'ใช้การได้': isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isOcean ? '#00F3FF' : isColorful ? '#0070f3' : '#10b981',
+    'ใช้การได้': isTactical ? '#39FF14' : isExecutive ? '#FFB000' : isOcean ? '#00F3FF' : isInnovation ? '#D946EF' : isColorful ? '#0070f3' : '#10b981',
     'ชำรุด': isColorful ? '#facc15' : '#facc15',
     'รอจำหน่าย': isColorful ? '#ff0080' : '#ef4444'
   };
@@ -206,10 +235,10 @@ export const DepartmentBarChart: React.FC<ChartProps> = ({ data, theme, testId, 
             cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
             contentStyle={{ 
               backgroundColor: isModern 
-                ? (isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
+                ? (isInnovation ? 'rgba(5, 1, 16, 0.9)' : isOcean ? 'rgba(0, 13, 26, 0.95)' : isTactical ? 'rgba(10, 10, 10, 0.95)' : isExecutive ? 'rgba(5, 5, 5, 0.95)' : isColorful ? 'rgba(10, 10, 15, 0.95)' : 'rgba(255,255,255,0.98)') 
                 : '#fff', 
               border: isModern 
-                ? (isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
+                ? (isInnovation ? '1px solid #D946EF' : isOcean ? '1px solid #00F3FF' : isTactical ? '1px solid #39FF14' : isExecutive ? '1px solid #FFB000' : isColorful ? '1px solid #7928ca' : '1px solid #ddd') 
                 : '1px solid #ccc', 
               borderRadius: '16px',
               fontWeight: 'bold',

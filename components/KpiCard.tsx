@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { THEME_CONFIG } from '../constants';
 import { ThemeType } from '../types';
@@ -66,7 +67,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, trend, tre
       data-testid={testId}
       className={`${styles.cardClass} p-6 h-full relative overflow-hidden group 
         ${isModern ? 'hover:scale-[1.02] active:scale-95 cursor-pointer border-l-4 border-l-transparent hover:border-l-current transition-all duration-300' : 'transition-all duration-300 hover:scale-105'}
-        ${isInnovation ? 'hover:border-l-innovation-aurora' : ''}
+        ${isInnovation ? 'hover:border-l-innovation-primary' : ''}
         ${isOcean ? 'hover:border-l-ocean-neon' : ''}
         ${isTactical ? 'hover:border-l-ops-green' : ''}
         ${isExecutive ? 'hover:border-l-exec-gold' : ''}
@@ -82,7 +83,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, trend, tre
         <div className={`p-3 rounded-2xl ${
           isTactical ? 'bg-ops-green/20 text-ops-green border border-ops-green/50 shadow-[0_0_10px_rgba(57,255,20,0.4)]' : 
           isExecutive ? 'bg-exec-gold/20 text-exec-gold border border-exec-gold/50 shadow-[0_0_10px_rgba(255,176,0,0.4)]' : 
-          isInnovation ? 'bg-gradient-to-br from-blue-50 to-white text-innovation-aurora shadow-sm border border-white' :
+          isInnovation ? 'bg-innovation-layer1/50 text-innovation-primary shadow-[0_0_15px_rgba(217,70,239,0.3)] border border-innovation-primary/30' :
           isOcean ? 'bg-ocean-neon/20 text-ocean-neon border border-ocean-neon/50 shadow-[0_0_10px_rgba(0,243,255,0.4)]' :
           'bg-gray-200 text-gray-600'
         }`}>
@@ -94,8 +95,8 @@ export const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, trend, tre
         <div className="mt-4 flex items-center">
           <span className={`text-sm font-bold mr-2 px-2 py-0.5 rounded-full ${
             trendUp 
-              ? (isInnovation ? 'bg-green-50 text-innovation-neon' : isOcean ? 'bg-ocean-neon/20 text-ocean-neon border border-ocean-neon/30' : isTactical ? 'bg-ops-green/20 text-ops-green border border-ops-green/30' : isExecutive ? 'bg-exec-gold/20 text-exec-gold border border-exec-gold/30' : 'text-green-500') 
-              : (isInnovation ? 'bg-red-50 text-red-500' : isOcean ? 'bg-red-500/20 text-white border border-red-500/50' : isTactical ? 'bg-red-500/20 text-white border border-red-500/50' : isExecutive ? 'bg-red-500/20 text-white border border-red-500/50' : 'text-red-500')
+              ? (isInnovation ? 'bg-innovation-neon/20 text-innovation-neon border border-innovation-neon/30' : isOcean ? 'bg-ocean-neon/20 text-ocean-neon border border-ocean-neon/30' : isTactical ? 'bg-ops-green/20 text-ops-green border border-ops-green/30' : isExecutive ? 'bg-exec-gold/20 text-exec-gold border border-exec-gold/30' : 'text-green-500') 
+              : (isInnovation ? 'bg-red-500/20 text-red-400 border border-red-500/30' : isOcean ? 'bg-red-500/20 text-white border border-red-500/50' : isTactical ? 'bg-red-500/20 text-white border border-red-500/50' : isExecutive ? 'bg-red-500/20 text-white border border-red-500/50' : 'text-red-500')
           }`}>
             <i className={`fas fa-arrow-${trendUp ? 'up' : 'down'} mr-1`}></i>
             {trend}
@@ -107,7 +108,7 @@ export const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, trend, tre
       {/* Modern Theme Decorative Elements */}
       {isModern && (
         <div className={`absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700
-          ${isInnovation ? 'bg-gradient-to-r from-blue-400/10 to-purple-400/10' : isOcean ? 'bg-ocean-neon/10' : isTactical ? 'bg-ops-green/10' : isExecutive ? 'bg-exec-gold/10' : 'bg-white/10'}
+          ${isInnovation ? 'bg-innovation-primary/20 animate-pulse-neon' : isOcean ? 'bg-ocean-neon/10' : isTactical ? 'bg-ops-green/10' : isExecutive ? 'bg-exec-gold/10' : 'bg-white/10'}
         `}></div>
       )}
     </div>

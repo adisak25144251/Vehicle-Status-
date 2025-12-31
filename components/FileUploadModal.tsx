@@ -234,13 +234,13 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClos
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-slide-up">
       <div className={`
         w-full max-w-lg p-6 rounded-3xl relative transition-all overflow-hidden flex flex-col max-h-[90vh]
-        ${isInnovation ? 'glass-prism bg-white shadow-2xl' : isOcean ? 'bg-[#000d1a]/95 backdrop-blur-2xl border border-ocean-neon/40 shadow-[0_0_40px_rgba(0,243,255,0.2)]' : isTactical ? 'bg-black/90 backdrop-blur-xl border border-ops-green/40 shadow-[0_0_40px_rgba(57,255,20,0.15)]' : styles.cardClass}
+        ${isInnovation ? 'glass-prism bg-innovation-surface/90 shadow-[0_0_50px_rgba(217,70,239,0.3)] border border-innovation-primary/40' : isOcean ? 'bg-[#000d1a]/95 backdrop-blur-2xl border border-ocean-neon/40 shadow-[0_0_40px_rgba(0,243,255,0.2)]' : isTactical ? 'bg-black/90 backdrop-blur-xl border border-ops-green/40 shadow-[0_0_40px_rgba(57,255,20,0.15)]' : styles.cardClass}
       `}>
         <button onClick={onClose} className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors">
           <i className="fas fa-times"></i>
         </button>
 
-        <h3 className={`text-xl font-bold mb-4 ${isOcean ? 'text-ocean-neon' : isTactical ? 'text-ops-green' : 'text-white'}`}>
+        <h3 className={`text-xl font-bold mb-4 ${isOcean ? 'text-ocean-neon' : isTactical ? 'text-ops-green' : isInnovation ? 'text-transparent bg-clip-text bg-gradient-to-r from-innovation-primary to-innovation-secondary' : 'text-white'}`}>
             <i className="fas fa-microchip mr-2"></i> 
             Smart Data Import (AI 3.0)
         </h3>

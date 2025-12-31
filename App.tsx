@@ -140,19 +140,36 @@ const App: React.FC = () => {
 
   const ageData = useMemo(() => {
     const currentYear = new Date().getFullYear();
-    const ageMap: Record<string, number> = {};
+    const groups = {
+        'ไม่เกิน 5 ปี': 0,
+        '6-10 ปี': 0,
+        '11-15 ปี': 0,
+        '16 ปีขึ้นไป': 0
+    };
     
     filteredVehicles.forEach(v => {
       const vYear = v.purchase_year || currentYear;
       const normalizedVYear = vYear > 2400 ? vYear - 543 : vYear;
       const age = currentYear - normalizedVYear;
-      const label = `${age} ปี`;
-      ageMap[label] = (ageMap[label] || 0) + 1;
+
+      if (age <= 5) {
+          groups['ไม่เกิน 5 ปี']++;
+      } else if (age <= 10) {
+          groups['6-10 ปี']++;
+      } else if (age <= 15) {
+          groups['11-15 ปี']++;
+      } else {
+          groups['16 ปีขึ้นไป']++;
+      }
     });
     
-    return Object.keys(ageMap)
-      .sort((a, b) => parseInt(a) - parseInt(b))
-      .map(key => ({ name: key, value: ageMap[key] }));
+    // Convert to array and filter out zero values to keep chart clean (optional, keeping all ensures consistent legend)
+    return [
+        { name: 'ไม่เกิน 5 ปี', value: groups['ไม่เกิน 5 ปี'] },
+        { name: '6-10 ปี', value: groups['6-10 ปี'] },
+        { name: '11-15 ปี', value: groups['11-15 ปี'] },
+        { name: '16 ปีขึ้นไป', value: groups['16 ปีขึ้นไป'] }
+    ];
   }, [filteredVehicles]);
 
   const departmentData = useMemo(() => {
@@ -189,9 +206,11 @@ const App: React.FC = () => {
 
   // Interactive Filter Handlers
   const handleAgeFilter = (ageLabel: string) => {
-    const ageValue = ageLabel.split(' ')[0];
-    setFilterAgeMin(ageValue);
-    setFilterAgeMax(ageValue);
+    // Logic to set min/max based on the group label
+    if (ageLabel === 'ไม่เกิน 5 ปี') { setFilterAgeMin('0'); setFilterAgeMax('5'); }
+    else if (ageLabel === '6-10 ปี') { setFilterAgeMin('6'); setFilterAgeMax('10'); }
+    else if (ageLabel === '11-15 ปี') { setFilterAgeMin('11'); setFilterAgeMax('15'); }
+    else if (ageLabel === '16 ปีขึ้นไป') { setFilterAgeMin('16'); setFilterAgeMax('100'); }
   };
 
   const handleStatusFilter = (statusLabel: string) => {
@@ -209,7 +228,7 @@ const App: React.FC = () => {
       {/* Navbar */}
       <nav 
         className={`sticky top-0 z-50 transition-all duration-300 backdrop-blur-[24px] border-b border-white/10
-          ${isInnovation ? 'glass-prism bg-white/60' : 
+          ${isInnovation ? 'glass-prism bg-black/40 border-innovation-primary/20' : 
             isOcean ? 'bg-black/50' :
             isTactical ? 'bg-black/50' :
             isExecutive ? 'bg-white/5' :
@@ -220,7 +239,7 @@ const App: React.FC = () => {
              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:rotate-12
                ${isTactical ? 'bg-ops-green text-black' : 
                  isExecutive ? 'bg-exec-gold text-black' :
-                 isInnovation ? 'bg-blue-600 text-white' : 
+                 isInnovation ? 'bg-gradient-to-tr from-innovation-primary to-innovation-secondary text-white shadow-innovation-primary/50' : 
                  isOcean ? 'bg-ocean-neon text-black' :
                  isColorful ? 'bg-gradient-to-tr from-[#ff0080] to-[#7928ca] text-white' :
                  'bg-blue-600 text-white'}`}>
@@ -236,7 +255,7 @@ const App: React.FC = () => {
              </div>
           </div>
 
-          <div className={`hidden md:flex items-center gap-6 text-sm font-medium ${isInnovation ? 'text-gray-600' : styles.textClass}`}>
+          <div className={`hidden md:flex items-center gap-6 text-sm font-medium ${isInnovation ? 'text-innovation-secondary' : styles.textClass}`}>
             {[
               { id: 'dashboard', label: 'หน้าหลัก' },
               { id: 'analytics', label: 'วิเคราะห์ข้อมูล' },
@@ -247,7 +266,11 @@ const App: React.FC = () => {
                 key={item.id} 
                 onClick={() => setCurrentView(item.id as any)}
                 className={`transition-all border-b-2 border-transparent pb-1
-                  ${currentView === item.id ? (isColorful ? 'text-[#ff0080] border-[#ff0080] font-black' : 'text-white border-white font-bold') : 'opacity-60 hover:opacity-100'}
+                  ${currentView === item.id 
+                    ? (isColorful ? 'text-[#ff0080] border-[#ff0080] font-black' 
+                       : isInnovation ? 'text-innovation-neon border-innovation-primary font-bold drop-shadow-md'
+                       : 'text-white border-white font-bold') 
+                    : 'opacity-60 hover:opacity-100'}
                 `} 
               >
                 {item.label}
@@ -269,7 +292,7 @@ const App: React.FC = () => {
                     onClick={() => setTheme(opt.t)} 
                     className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all
                       ${theme === opt.t 
-                        ? (isColorful ? 'bg-gradient-to-r from-[#ff0080] to-[#7928ca] text-white' : 'bg-blue-600 text-white shadow-md') 
+                        ? (isColorful ? 'bg-gradient-to-r from-[#ff0080] to-[#7928ca] text-white' : isInnovation ? 'bg-gradient-to-r from-innovation-primary to-innovation-secondary text-white shadow-lg' : 'bg-blue-600 text-white shadow-md') 
                         : 'text-white/60 hover:text-white'}
                     `}
                   >

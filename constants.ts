@@ -1,3 +1,4 @@
+
 import { Vehicle, ThemeType } from './types';
 
 export const MOCK_VEHICLES: Vehicle[] = [
@@ -50,13 +51,13 @@ export const THEME_CONFIG = {
     font: "font-sans"
   },
   [ThemeType.INNOVATION]: {
-    name: "AI Innovation",
-    bgClass: "bg-innovation-surface",
-    textClass: "text-innovation-secondary",
-    cardClass: "glass-prism rounded-3xl transition-all duration-300 hover:shadow-lg",
-    primaryText: "text-innovation-primary",
-    secondaryText: "text-innovation-secondary",
-    accentBorder: "border-innovation-border",
+    name: "Neon Cyberpunk Glass",
+    bgClass: "bg-innovation-surface bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-innovation-layer1 via-innovation-surface to-black",
+    textClass: "text-cyan-100 drop-shadow-[0_0_2px_rgba(6,182,212,0.5)]",
+    cardClass: "glass-prism rounded-3xl transition-all duration-500 hover:shadow-[0_0_30px_rgba(217,70,239,0.2)] hover:border-innovation-primary/50",
+    primaryText: "text-transparent bg-clip-text bg-gradient-to-r from-innovation-primary via-innovation-aurora to-innovation-secondary drop-shadow-[0_0_10px_rgba(217,70,239,0.5)]",
+    secondaryText: "text-innovation-secondary font-medium tracking-wider",
+    accentBorder: "border-innovation-primary/50",
     font: "font-sans"
   },
   [ThemeType.OCEAN]: {
