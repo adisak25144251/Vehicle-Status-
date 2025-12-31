@@ -1,17 +1,203 @@
-export async function callGemini(prompt: string) {
-  if (!prompt?.trim()) throw new Error("Prompt ว่าง");
 
-  const res = await fetch("/api/gemini", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ prompt }),
-  });
+import { GoogleGenAI } from "@google/genai";
+import { Vehicle } from "../types";
 
-  const data = await res.json().catch(() => ({}));
+const createClient = () => {
+    let apiKey = '';
+    
+    // 1. Safe check for process.env (Standard/Node/Webpack)
+    try {
+        if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+            apiKey = process.env.API_KEY;
+        }
+    } catch (e) {
+        // Ignore process not defined errors
+    }
 
-  if (!res.ok) {
-    throw new Error(data?.error || data?.message || `AI request failed (${res.status})`);
-  }
+    // 2. Safe check for import.meta.env (Vite/Vercel)
+    if (!apiKey) {
+        try {
+            // @ts-ignore
+            if (import.meta && import.meta.env) {
+                // @ts-ignore
+                apiKey = import.meta.env.VITE_API_KEY || import.meta.env.API_KEY;
+            }
+        } catch (e) {
+            // Ignore import.meta errors
+        }
+    }
 
-  return (data.text ?? "") as string;
+    if (!apiKey) {
+        console.warn("API_KEY not found in environment variables. Please set VITE_API_KEY in Vercel.");
+        return null;
+    }
+    return new GoogleGenAI({ apiKey });
 }
+
+export const generateFleetInsight = async (vehicles: Vehicle[]): Promise<string> => {
+    const client = createClient();
+    if (!client) return "AI service unavailable: Missing API Key (Please check VITE_API_KEY in Settings).";
+
+    const total = vehicles.length;
+    const maintenance = vehicles.filter(v => v.condition_status === 'Maintenance').length;
+    const disposal = vehicles.filter(v => v.condition_status === 'Disposal').length;
+    const totalValue = vehicles.reduce((sum, v) => sum + v.asset_value, 0);
+    const byDept = vehicles.reduce((acc, v) => {
+        acc[v.department] = (acc[v.department] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const prompt = `
+        As a Border Patrol Police Logistics AI (AI ผู้ช่วยส่งกำลังบำรุง ตชด.), analyze this fleet snapshot:
+        - Total Vehicles: ${total}
+        - Vehicles in Maintenance: ${maintenance}
+        - Vehicles for Disposal: ${disposal}
+        - Total Asset Value: ${totalValue.toLocaleString()} THB
+        - Breakdown by Dept: ${JSON.stringify(byDept)}
+        
+        Provide a concise executive summary in Thai language (max 3 sentences).
+        Highlight any readiness risks (e.g. high maintenance ratio) and a brief budget recommendation for the Border Patrol Bureau.
+        Tone: Official, authoritative, and strategic.
+    `;
+
+    try {
+        const response = await client.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: prompt,
+        });
+        return response.text || "No insights generated.";
+    } catch (error) {
+        console.error("Gemini API Error:", error);
+        return "System Error: Unable to retrieve AI insights.";
+    }
+};
+
+export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[]): Promise<{ text: string, links?: { title: string, uri: string }[] }> => {
+    const client = createClient();
+    if (!client) return { text: "ระบบ AI ไม่พร้อมใช้งาน (กรุณาตรวจสอบ API Key ในการตั้งค่า Vercel)" };
+
+    const fleetSummary = contextVehicles.slice(0, 50).map(v => `${v.plate_no}: ${v.brand} ${v.vehicle_type} (${v.condition_status})`).join(', ');
+
+    const systemInstruction = `
+      คุณคือ "Advanced Fleet Intelligence & Governance Agent" ผู้เชี่ยวชาญการบริหารกองยานพาหนะภาครัฐ (ตชด.)
+      คุณสามารถเข้าถึงข้อมูลอินเทอร์เน็ตแบบเรียลไทม์เพื่อเปรียบเทียบข้อมูลภายในกับโลกภายนอกได้
+      ข้อมูลกองยานปัจจุบันบางส่วน: [${fleetSummary}]
+      
+      แนวทางการตอบ:
+      - ตอบด้วยภาษาราชการที่สุภาพแต่ฉลาดและทันสมัย
+      - หากผู้ใช้ถามเรื่องราคากลางหรือเทคโนโลยีใหม่ ให้ใช้การค้นหาออนไลน์ประกอบ
+      - เน้นความคุ้มค่า (3Es) และความโปร่งใส
+    `;
+
+    try {
+        const response = await client.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: message,
+            config: {
+                systemInstruction: systemInstruction,
+                temperature: 0.3,
+                tools: [{ googleSearch: {} }]
+            }
+        });
+
+        const text = response.text || "ขออภัยครับ ผมไม่สามารถประมวลผลคำสั่งนี้ได้ในขณะนี้";
+        
+        // Extract grounding links if available
+        const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+        const links = groundingChunks?.map((chunk: any) => {
+            if (chunk.web) return { title: chunk.web.title, uri: chunk.web.uri };
+            return null;
+        }).filter(Boolean) as { title: string, uri: string }[];
+
+        return { text, links: links && links.length > 0 ? links : undefined };
+    } catch (error) {
+        console.error("Chat Error:", error);
+        return { text: "เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่ายความมั่นคง กรุณาลองใหม่ครับ" };
+    }
+};
+
+export const analyzeAssetRegistration = async (vehicles: Vehicle[]): Promise<string> => {
+    const client = createClient();
+    if (!client) return "AI service unavailable. (Check API Key)";
+
+    const dataContext = JSON.stringify(vehicles);
+
+    const prompt = `
+บทบาท: คุณคือ “World-Class Data Extraction + AI/ML Architect + Thai Language Editor (Gov/Business Grade)”
+ภารกิจ: รับไฟล์/ข้อความ (JSON ตาราง) แล้วสกัดข้อมูล → ทำความสะอาด → จัดหมวดหมู่ → สร้างตารางมาตรฐาน → ตรวจสอบความถูกต้อง/ความครบถ้วน → แก้ภาษาไทยอัตโนมัติ → ออกแบบแผน AI/ML ขั้นสูง พร้อมรายงานแบบมืออาชีพ
+
+ข้อกำหนดเคร่งครัด (ห้ามละเมิด):
+1) ห้ามเดา/ห้ามเติมข้อมูลเอง: ถ้าไม่มีหลักฐานในไฟล์ ต้องระบุว่า “ไม่พบข้อมูลในไฟล์” และใส่รายการคำถาม/ข้อมูลที่ต้องเพิ่ม
+2) ทุกค่าที่สกัด (ตัวเลข/ชื่อ/วันที่/สถานะ) ต้องมีหลักฐานอ้างอิง (evidence)
+3) แก้ภาษาไทยอัตโนมัติ: สะกด, เว้นวรรค, คำทับศัพท์, รูปแบบราชการ/ธุรกิจ ให้ถูกต้องและสม่ำเสมอ โดยห้ามเปลี่ยนความหมายเดิม
+4) จัดหมวดหมู่ข้อมูลเป็น “Data Domains”: Master data, Transaction/Events, Finance/Budget, Status/Workflow, Documents/References
+
+ข้อมูลอินพุตสำหรับประมวลผล:
+${dataContext}
+
+เอาต์พุตที่ต้องการ (ต้องส่งออกครบ 8 ส่วน):
+1) normalized_tables (สรุปรายการตารางทั้งหมด)
+2) tables (แสดงอย่างน้อย “ตัวอย่าง 10 แถวแรก” ต่อหนึ่งตารางสำคัญ)
+3) evidence_map (ตัวอย่างหลักฐานอ้างอิงแบบเป็นระบบ)
+4) data_dictionary (ชื่อคอลัมน์ไทย/อังกฤษ, type, unit, description)
+5) data_quality_report + quality_score (0-100 พร้อมเหตุผล)
+6) business_summary (ภาษาไทยทางการ อ่านง่าย)
+7) ml_roadmap (แผนงาน AI/ML ระยะสั้น/กลาง/ยาว สำหรับข้อมูลชุดนี้)
+8) learning_notes (สิ่งที่เรียนรู้จากไฟล์ชุดนี้ + ข้อเสนอแนะเพื่อทำรอบถัดไปให้แม่นขึ้น)
+
+รูปแบบการส่งออก: ใช้ Markdown ที่อ่านง่ายและคัดลอกไปทำงานต่อได้ทันที
+    `;
+
+    try {
+        const response = await client.models.generateContent({
+            model: "gemini-3-pro-preview",
+            contents: prompt,
+            config: {
+                temperature: 0.2,
+            }
+        });
+        return response.text || "การวิเคราะห์ล้มเหลว: ไม่ได้รับข้อมูลจาก AI";
+    } catch (error) {
+        console.error("Asset Analysis Error:", error);
+        return "เกิดข้อผิดพลาดในการประมวลผลข้อมูลทะเบียนรถอัจฉริยะ";
+    }
+};
+
+export const generateGovernanceAnalysis = async (vehicles: Vehicle[]): Promise<string> => {
+    const client = createClient();
+    if (!client) return "AI service unavailable. (Check API Key)";
+
+    const dataContext = JSON.stringify(vehicles);
+
+    const prompt = `
+คุณคือ "Chief Governance & Fleet Auditor (Expert level)"
+ภารกิจ: วิเคราะห์ธรรมาภิบาลกองยานพาหนะ (ตชด.) ตามหลัก 3Es (Economy, Efficiency, Effectiveness)
+
+ข้อมูลอินพุต (JSON):
+${dataContext}
+
+ความต้องการ:
+1) วิเคราะห์ความคุ้มค่า (Value for Money) และประเมินต้นทุนรวม (TCO)
+2) ตรวจสอบความผิดปกติหรือความเสี่ยงด้านธรรมาภิบาล
+3) ให้ข้อเสนอแนะเชิงกลยุทธ์
+4) สร้างโครงสร้าง JSON สำหรับทำ Dashboard (บรรจุใน Markdown Code Block แบบ json) ซึ่งประกอบด้วย metrics สำคัญ เช่น tco_estimate, efficiency_score, risk_level
+
+เอาต์พุต:
+- รายงานสรุปภาษาไทยแบบทางการ (Markdown)
+- Dashboard Spec ในรูปแบบ JSON Code Block ( \`\`\`json ... \`\`\` )
+    `;
+
+    try {
+        const response = await client.models.generateContent({
+            model: "gemini-3-pro-preview",
+            contents: prompt,
+            config: {
+                temperature: 0.4,
+            }
+        });
+        return response.text || "การวิเคราะห์ธรรมาภิบาลล้มเหลว";
+    } catch (error) {
+        console.error("Governance Analysis Error:", error);
+        return "เกิดข้อผิดพลาดในการวิเคราะห์ธรรมาภิบาล";
+    }
+};
