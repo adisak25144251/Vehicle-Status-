@@ -1,111 +1,135 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Border Patrol Police Bureau</title>
+
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Meie+Script&family=Sarabun:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Meie+Script&family=Sarabun:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'class',
+        darkMode: "class",
         theme: {
           extend: {
             colors: {
               ocean: {
-                pastel: '#ABF4F5',
-                neon: '#00F3FF',
+                pastel: "#ABF4F5",
+                neon: "#00F3FF",
               },
               ops: {
-                pink: '#EA6EE8',
-                green: '#39FF14',
+                pink: "#EA6EE8",
+                green: "#39FF14",
               },
               exec: {
-                gold: '#FFB000',
+                gold: "#FFB000",
               },
               tactical: {
-                bg: '#020617',
-                card: '#111111',
-                primary: '#39FF14',
-                secondary: '#059669',
-                text: '#e0f2fe',
-                border: '#064e3b'
+                bg: "#020617",
+                card: "#111111",
+                primary: "#39FF14",
+                secondary: "#059669",
+                text: "#e0f2fe",
+                border: "#064e3b",
               },
               executive: {
-                bg: '#050505',
-                card: '#2d3748',
-                primary: '#FFB000',
-                secondary: '#4299e1',
-                text: '#f7fafc',
-                border: '#4a5568'
+                bg: "#050505",
+                card: "#2d3748",
+                primary: "#FFB000",
+                secondary: "#4299e1",
+                text: "#f7fafc",
+                border: "#4a5568",
               },
               official: {
-                bg: '#f7fafc',
-                card: '#ffffff',
-                primary: '#2c5282',
-                secondary: '#e53e3e',
-                text: '#2d3748',
-                border: '#e2e8f0'
+                bg: "#f7fafc",
+                card: "#ffffff",
+                primary: "#2c5282",
+                secondary: "#e53e3e",
+                text: "#2d3748",
+                border: "#e2e8f0",
               },
               innovation: {
-                surface: '#050110', /* Deep Void Purple */
-                layer1: '#1A0B2E',   /* Dark Purple Layer */
-                primary: '#D946EF',  /* Neon Fuchsia */
-                secondary: '#06B6D4',/* Neon Cyan */
-                aurora: '#8B5CF6',   /* Electric Violet */
-                quantum: '#F472B6',  /* Pink */
-                neon: '#00F0FF',     /* Cyber Cyan */
-                border: 'rgba(217, 70, 239, 0.3)'
-              }
+                surface: "#050110" /* Deep Void Purple */,
+                layer1: "#1A0B2E" /* Dark Purple Layer */,
+                primary: "#D946EF" /* Neon Fuchsia */,
+                secondary: "#06B6D4" /* Neon Cyan */,
+                aurora: "#8B5CF6" /* Electric Violet */,
+                quantum: "#F472B6" /* Pink */,
+                neon: "#00F0FF" /* Cyber Cyan */,
+                border: "rgba(217, 70, 239, 0.3)",
+              },
             },
             fontFamily: {
-              mono: ['"TH Sarabun PSK"', 'Sarabun', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace'],
-              sans: ['"TH Sarabun PSK"', 'Sarabun', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'sans-serif'],
-              serif: ['"TH Sarabun PSK"', 'Sarabun', 'ui-serif', 'Georgia', 'serif'],
-              innovation: ['"TH Sarabun PSK"', 'Sarabun', 'Inter', 'sans-serif'],
-              script: ['"Meie Script"', 'cursive'],
+              mono: [
+                '"TH Sarabun PSK"',
+                "Sarabun",
+                "ui-monospace",
+                "SFMono-Regular",
+                "Menlo",
+                "Monaco",
+                "monospace",
+              ],
+              sans: [
+                '"TH Sarabun PSK"',
+                "Sarabun",
+                "Inter",
+                "ui-sans-serif",
+                "system-ui",
+                "-apple-system",
+                "sans-serif",
+              ],
+              serif: ['"TH Sarabun PSK"', "Sarabun", "ui-serif", "Georgia", "serif"],
+              innovation: ['"TH Sarabun PSK"', "Sarabun", "Inter", "sans-serif"],
+              script: ['"Meie Script"', "cursive"],
             },
             animation: {
-              'blob': 'blob 10s infinite',
-              'border-trace': 'borderTrace 2s linear infinite',
-              'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-              'bounce-slow': 'bounce 3s infinite',
-              'pulse-neon': 'pulseNeon 2s infinite',
-              'glow-pulse': 'glowPulse 3s infinite',
+              blob: "blob 10s infinite",
+              "border-trace": "borderTrace 2s linear infinite",
+              "slide-up": "slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              "bounce-slow": "bounce 3s infinite",
+              "pulse-neon": "pulseNeon 2s infinite",
+              "glow-pulse": "glowPulse 3s infinite",
             },
             keyframes: {
               blob: {
-                '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                "0%": { transform: "translate(0px, 0px) scale(1)" },
+                "33%": { transform: "translate(30px, -50px) scale(1.1)" },
+                "66%": { transform: "translate(-20px, 20px) scale(0.9)" },
+                "100%": { transform: "translate(0px, 0px) scale(1)" },
               },
               borderTrace: {
-                '0%, 100%': { backgroundPosition: '0% 50%' },
-                '50%': { backgroundPosition: '100% 50%' },
+                "0%, 100%": { backgroundPosition: "0% 50%" },
+                "50%": { backgroundPosition: "100% 50%" },
               },
               slideUp: {
-                '0%': { opacity: '0', transform: 'translateY(20px) scale(0.98)', filter: 'blur(4px)' },
-                '100%': { opacity: '1', transform: 'translateY(0) scale(1)', filter: 'blur(0)' },
+                "0%": {
+                  opacity: "0",
+                  transform: "translateY(20px) scale(0.98)",
+                  filter: "blur(4px)",
+                },
+                "100%": { opacity: "1", transform: "translateY(0) scale(1)", filter: "blur(0)" },
               },
               pulseNeon: {
-                '0%, 100%': { opacity: '0.5', transform: 'scale(1)' },
-                '50%': { opacity: '1', transform: 'scale(1.05)' },
+                "0%, 100%": { opacity: "0.5", transform: "scale(1)" },
+                "50%": { opacity: "1", transform: "scale(1.05)" },
               },
               glowPulse: {
-                '0%, 100%': { boxShadow: '0 0 10px rgba(217, 70, 239, 0.3)' },
-                '50%': { boxShadow: '0 0 25px rgba(6, 182, 212, 0.5)' },
-              }
-            }
-          }
-        }
-      }
+                "0%, 100%": { boxShadow: "0 0 10px rgba(217, 70, 239, 0.3)" },
+                "50%": { boxShadow: "0 0 25px rgba(6, 182, 212, 0.5)" },
+              },
+            },
+          },
+        },
+      };
     </script>
+
     <style>
       .glass-prism {
         background: rgba(10, 5, 20, 0.6);
@@ -115,20 +139,25 @@
         box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
       }
       .cyber-border {
-         position: relative;
+        position: relative;
       }
       .cyber-border::before {
-         content: '';
-         position: absolute;
-         inset: 0;
-         border-radius: inherit;
-         padding: 1px;
-         background: linear-gradient(45deg, #D946EF, #06B6D4);
-         -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-         -webkit-mask-composite: xor;
-         mask-composite: exclude;
-         opacity: 0.5;
-         pointer-events: none;
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(45deg, #d946ef, #06b6d4);
+
+        /* ✅ Add standard mask for compatibility */
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+
+        opacity: 0.5;
+        pointer-events: none;
       }
       .neon-border-cyan {
         box-shadow: 0 0 15px rgba(0, 243, 255, 0.3), inset 0 0 5px rgba(0, 243, 255, 0.1);
@@ -140,34 +169,40 @@
         width: 6px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(0,0,0,0.05);
+        background: rgba(0, 0, 0, 0.05);
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, 0.2);
         border-radius: 10px;
       }
     </style>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
 
-  <link rel="stylesheet" href="/index.css">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+
     <script type="importmap">
-    {
-      "imports": {
-        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-        "recharts": "https://esm.sh/recharts@^3.6.0",
-        "react/": "https://esm.sh/react@^19.2.3/",
-        "react": "https://esm.sh/react@^19.2.3",
-        "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-        "xlsx": "https://esm.sh/xlsx@0.18.5",
-        "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.10.38",
-        "mammoth": "https://esm.sh/mammoth@1.8.0"
+      {
+        "imports": {
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+          "recharts": "https://esm.sh/recharts@^3.6.0",
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "react": "https://esm.sh/react@^19.2.3",
+          "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+          "xlsx": "https://esm.sh/xlsx@0.18.5",
+          "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.10.38",
+          "mammoth": "https://esm.sh/mammoth@1.8.0"
+        }
       }
-    }
     </script>
-  <script type="module" crossorigin src="/Vehicle-Statuts/assets/index-Cds15McU.js"></script>
-</head>
+    <script type="module" crossorigin src="/Vehicle-Statuts/assets/index-Cds15McU.js"></script>
+  </head>
+
   <body>
     <div id="root"></div>
-</body>
+
+    <!-- ✅ Keep only one entry script (relative path) -->
+  </body>
 </html>
-    
