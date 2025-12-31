@@ -3,16 +3,40 @@ import { GoogleGenAI } from "@google/genai";
 import { Vehicle } from "../types";
 
 const createClient = () => {
-    if (!process.env.API_KEY) {
-        console.warn("API_KEY not set in environment.");
+    let apiKey = '';
+    
+    // 1. Safe check for process.env (Standard/Node/Webpack)
+    try {
+        if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+            apiKey = process.env.API_KEY;
+        }
+    } catch (e) {
+        // Ignore process not defined errors
+    }
+
+    // 2. Safe check for import.meta.env (Vite/Vercel)
+    if (!apiKey) {
+        try {
+            // @ts-ignore
+            if (import.meta && import.meta.env) {
+                // @ts-ignore
+                apiKey = import.meta.env.VITE_API_KEY || import.meta.env.API_KEY;
+            }
+        } catch (e) {
+            // Ignore import.meta errors
+        }
+    }
+
+    if (!apiKey) {
+        console.warn("API_KEY not found in environment variables. Please set VITE_API_KEY in Vercel.");
         return null;
     }
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    return new GoogleGenAI({ apiKey });
 }
 
 export const generateFleetInsight = async (vehicles: Vehicle[]): Promise<string> => {
     const client = createClient();
-    if (!client) return "AI service unavailable: Missing API Key.";
+    if (!client) return "AI service unavailable: Missing API Key (Please check VITE_API_KEY in Settings).";
 
     const total = vehicles.length;
     const maintenance = vehicles.filter(v => v.condition_status === 'Maintenance').length;
@@ -50,7 +74,7 @@ export const generateFleetInsight = async (vehicles: Vehicle[]): Promise<string>
 
 export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[]): Promise<{ text: string, links?: { title: string, uri: string }[] }> => {
     const client = createClient();
-    if (!client) return { text: "AI Chat Unavailable." };
+    if (!client) return { text: "ระบบ AI ไม่พร้อมใช้งาน (กรุณาตรวจสอบ API Key ในการตั้งค่า Vercel)" };
 
     const fleetSummary = contextVehicles.slice(0, 50).map(v => `${v.plate_no}: ${v.brand} ${v.vehicle_type} (${v.condition_status})`).join(', ');
 
@@ -94,7 +118,7 @@ export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[
 
 export const analyzeAssetRegistration = async (vehicles: Vehicle[]): Promise<string> => {
     const client = createClient();
-    if (!client) return "AI service unavailable.";
+    if (!client) return "AI service unavailable. (Check API Key)";
 
     const dataContext = JSON.stringify(vehicles);
 
@@ -141,7 +165,7 @@ ${dataContext}
 
 export const generateGovernanceAnalysis = async (vehicles: Vehicle[]): Promise<string> => {
     const client = createClient();
-    if (!client) return "AI service unavailable.";
+    if (!client) return "AI service unavailable. (Check API Key)";
 
     const dataContext = JSON.stringify(vehicles);
 

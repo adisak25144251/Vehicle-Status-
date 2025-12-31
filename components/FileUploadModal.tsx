@@ -61,19 +61,20 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClos
   };
 
   const keywordMap: Record<string, string[]> = {
-    plate_no: ['ทะเบียน', 'เลขทะเบียน', 'หมายเลขโล่', 'plate', 'registration', 'no', 'vehicleno', 'id'],
-    vehicle_type: ['ประเภท', 'ชนิด', 'ลักษณะ', 'category', 'type', 'kind', 'class'],
-    brand: ['ยี่ห้อ', 'รุ่น', 'brand', 'model', 'manufacturer', 'maker'],
-    engine_no: ['เลขเครื่อง', 'หมายเลขเครื่อง', 'engine', 'chassis', 'vin', 'serial'],
-    asset_value: ['ราคา', 'มูลค่า', 'งบประมาณ', 'ทุน', 'บาท', 'value', 'price', 'cost', 'amount', 'assetvalue'],
-    department: ['หน่วยงาน', 'สังกัด', 'แผนก', 'กอง', 'กำกับการ', 'unit', 'dept', 'department', 'office', 'section'],
-    condition_status: ['สถานะ', 'สภาพ', 'ความพร้อม', 'status', 'condition', 'readiness', 'state'],
-    purchase_year: ['ปี', 'พศ', 'คศ', 'จัดซื้อ', 'acquired', 'purchase', 'year', 'date', 'acquiredyear']
+    plate_no: ['ทะเบียน', 'เลขทะเบียน', 'หมายเลขโล่', 'plate', 'registration', 'no.', 'no', 'vehicleno', 'id', 'license'],
+    vehicle_type: ['ประเภท', 'ชนิด', 'ลักษณะ', 'category', 'type', 'kind', 'class', 'vehicle'],
+    brand: ['ยี่ห้อ', 'รุ่น', 'แบบ', 'brand', 'model', 'manufacturer', 'maker'],
+    engine_no: ['เลขเครื่อง', 'หมายเลขเครื่อง', 'engine', 'chassis', 'vin', 'serial', 'number'],
+    asset_value: ['ราคา', 'มูลค่า', 'งบประมาณ', 'ทุน', 'บาท', 'value', 'price', 'cost', 'amount', 'assetvalue', 'budget'],
+    department: ['หน่วยงาน', 'สังกัด', 'แผนก', 'กอง', 'กำกับการ', 'unit', 'dept', 'department', 'office', 'section', 'division'],
+    condition_status: ['สถานะ', 'สภาพ', 'ความพร้อม', 'status', 'condition', 'readiness', 'state', 'remark', 'หมายเหตุ'],
+    purchase_year: ['ปี', 'พศ', 'คศ', 'จัดซื้อ', 'acquired', 'purchase', 'year', 'date', 'acquiredyear', 'fiscal']
   };
 
   const findHeaders = (jsonData: any[][]) => {
     let map: Record<string, number> = {};
     let headerRowIndex = -1;
+    let maxMatchCount = 0;
 
     // Advanced Deep Scan: Scan each row from top down
     for (let r = 0; r < Math.min(jsonData.length, 100); r++) {
@@ -81,6 +82,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClos
       if (!row || !Array.isArray(row)) continue;
 
       const currentMap: Record<string, number> = {};
+      let matchCount = 0;
       
       // Within row: Scan columns from left to right
       row.forEach((cell, c) => {
@@ -89,21 +91,25 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClos
 
         for (const [key, keywords] of Object.entries(keywordMap)) {
           if (keywords.some(k => cellText.includes(k))) {
-             if (currentMap[key] === undefined || keywords.some(k => cellText === k)) {
+             // If this column hasn't been mapped yet, or if exact match preference
+             if (currentMap[key] === undefined) {
                currentMap[key] = c;
+               matchCount++;
              }
           }
         }
       });
 
-      // If we found a row with more mappings than before, update
-      if (Object.keys(currentMap).length > Object.keys(map).length) {
+      // Relaxed logic: We need at least 'plate_no' OR 'brand' plus at least 1 other field to consider it a header row
+      // OR if we found a row with significantly more matches than before
+      if (matchCount > maxMatchCount && (currentMap['plate_no'] !== undefined || currentMap['brand'] !== undefined)) {
         map = currentMap;
         headerRowIndex = r;
+        maxMatchCount = matchCount;
       }
 
-      // Early break if we found mandatory fields
-      if (map['plate_no'] !== undefined && map['department'] !== undefined && Object.keys(map).length >= 4) {
+      // Early break if we found a very good candidate (4+ fields including key ones)
+      if (matchCount >= 4 && currentMap['plate_no'] !== undefined) {
         break;
       }
     }
@@ -114,31 +120,47 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClos
     const { map, headerRowIndex } = findHeaders(jsonData);
     
     if (headerRowIndex === -1 || Object.keys(map).length < 2) {
-      throw new Error("ไม่สามารถระบุหัวข้อข้อมูลได้ (Headers Not Found)");
+      // Fallback: If no headers found, assume column 0 is plate, column 1 is brand/type if data exists
+      if (jsonData.length > 1 && jsonData[1].length >= 2) {
+         addLog("ไม่พบหัวตารางที่ชัดเจน - ระบบกำลังพยายามใช้การวิเคราะห์โครงสร้างอัตโนมัติ...", 'pending');
+         // Try to construct map blindly
+         map['plate_no'] = 0;
+         map['vehicle_type'] = 1;
+         // ... others default to undefined
+         // Use row 0 as header index (data starts at 1)
+      } else {
+         throw new Error("ไม่พบโครงสร้างตารางที่สามารถอ่านได้ (กรุณาตรวจสอบว่ามีหัวคอลัมน์เช่น 'ทะเบียน' หรือ 'ยี่ห้อ')");
+      }
+    } else {
+      addLog(`พบตารางข้อมูลที่บรรทัดที่ ${headerRowIndex + 1} (พบ ${Object.keys(map).length} คอลัมน์)`, 'success');
     }
 
-    addLog(`พบตารางข้อมูลที่บรรทัดที่ ${headerRowIndex + 1}...`, 'success');
-    addLog(`กำลังสกัดข้อมูล...`);
+    addLog(`กำลังสกัดข้อมูลยานพาหนะ...`);
 
-    const rows = jsonData.slice(headerRowIndex + 1);
+    // Only start slicing if we have a valid header index, otherwise start from 0 or 1
+    const startRow = headerRowIndex === -1 ? 1 : headerRowIndex + 1;
+    const rows = jsonData.slice(startRow);
     const newVehicles: Vehicle[] = [];
 
     rows.forEach((row: any) => {
         if (!row || row.length === 0) return;
         
-        const getVal = (key: string) => row[map[key]];
-        const plate = getVal('plate_no');
+        const getVal = (key: string) => (map[key] !== undefined ? row[map[key]] : undefined);
+        const plate = getVal('plate_no') || (headerRowIndex === -1 ? row[0] : undefined); // Fallback to col 0
 
-        if (plate && String(plate).trim() !== '') {
+        if (plate && String(plate).trim() !== '' && String(plate).length < 50) { // Basic sanity check
             const rawYear = Number(String(getVal('purchase_year') || '').replace(/[^0-9]/g, ''));
-            // Normalize Year: If BE (> 2400) convert to AD
             const currentYear = new Date().getFullYear();
-            const normalizedYear = (rawYear > 2400) ? rawYear - 543 : (rawYear || currentYear);
+            // Normalize Year: If BE (> 2400) convert to AD
+            let normalizedYear = (rawYear > 2400) ? rawYear - 543 : (rawYear || undefined);
+            
+            // Heuristic: if year is too small (e.g. < 1900) or future, ignore
+            if (normalizedYear && (normalizedYear < 1950 || normalizedYear > currentYear + 1)) normalizedYear = undefined;
 
             newVehicles.push({
                 plate_no: String(plate).trim(),
-                vehicle_type: String(getVal('vehicle_type') || "ยานพาหนะทั่วไป").trim(),
-                brand: String(getVal('brand') || "ไม่ระบุยี่ห้อ").trim(),
+                vehicle_type: String(getVal('vehicle_type') || row[1] || "ยานพาหนะทั่วไป").trim(),
+                brand: String(getVal('brand') || row[2] || "ไม่ระบุยี่ห้อ").trim(),
                 engine_no: String(getVal('engine_no') || "-").trim(),
                 asset_value: Number(String(getVal('asset_value') || '0').replace(/[^0-9.]/g, '')) || 0,
                 department: String(getVal('department') || "ไม่ระบุหน่วยงาน").trim(),
@@ -211,7 +233,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({ isOpen, onClos
             onUpload(newVehicles);
             onClose();
         } else {
-            addLog("ไม่พบข้อมูลยานพาหนะในไฟล์", 'error', "สาเหตุ: รูปแบบตารางไม่ถูกต้องหรือไม่มีข้อมูลแถว");
+            addLog("ไม่พบข้อมูลยานพาหนะในไฟล์", 'error', "สาเหตุ: ไม่พบแถวที่มีข้อมูลทะเบียนรถ หรือรูปแบบไฟล์ซับซ้อนเกินไป");
         }
 
     } catch (err: any) {
