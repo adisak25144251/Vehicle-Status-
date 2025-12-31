@@ -9,9 +9,10 @@ interface AssetsViewProps {
   vehicles: Vehicle[];
   theme: ThemeType;
   onUploadClick: () => void;
+  onResetData: () => void;
 }
 
-export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploadClick }) => {
+export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploadClick, onResetData }) => {
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const styles = THEME_CONFIG[theme];
@@ -111,6 +112,17 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploa
             `}
           >
             <i className="fas fa-file-excel"></i> นำเข้าไฟล์ (Excel/Master)
+          </button>
+
+          <button 
+            onClick={onResetData}
+            className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 border
+               ${isColorful ? 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20' : 
+                 'bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/20'}
+            `}
+            title="รีเซ็ตเป็นข้อมูลตัวอย่าง"
+          >
+            <i className="fas fa-rotate-left"></i> รีเซ็ต
           </button>
           
           <button 
@@ -250,3 +262,4 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploa
     </div>
   );
 };
+    

@@ -33,9 +33,13 @@ const App: React.FC = () => {
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  // Save to localStorage whenever vehicles state changes
+  // Save to localStorage whenever vehicles state changes (Safe Save)
   useEffect(() => {
-    localStorage.setItem('fleet_vehicles_data', JSON.stringify(vehicles));
+    try {
+      localStorage.setItem('fleet_vehicles_data', JSON.stringify(vehicles));
+    } catch (error) {
+      console.error("Failed to save data to localStorage:", error);
+    }
   }, [vehicles]);
 
   // Filters
@@ -203,6 +207,14 @@ const App: React.FC = () => {
     clearAllFilters(); // Reset filters so new data is visible immediately
     setCurrentView('dashboard'); // Switch to dashboard to show result
   };
+
+  const handleResetData = useCallback(() => {
+    if (window.confirm("คุณต้องการล้างข้อมูลที่นำเข้าทั้งหมดและกลับไปใช้ข้อมูลตัวอย่าง (Mock Data) หรือไม่?")) {
+      localStorage.removeItem('fleet_vehicles_data');
+      setVehicles(MOCK_VEHICLES);
+      clearAllFilters();
+    }
+  }, [clearAllFilters]);
 
   // Interactive Filter Handlers
   const handleAgeFilter = (ageLabel: string) => {
@@ -444,7 +456,7 @@ const App: React.FC = () => {
         )}
 
         {currentView === 'analytics' && <AnalyticsView vehicles={filteredVehicles} theme={theme} />}
-        {currentView === 'assets' && <AssetsView vehicles={vehicles} theme={theme} onUploadClick={() => setShowUploadModal(true)} />}
+        {currentView === 'assets' && <AssetsView vehicles={vehicles} theme={theme} onUploadClick={() => setShowUploadModal(true)} onResetData={handleResetData} />}
         {currentView === 'settings' && <div className="p-20 text-center opacity-30 text-white text-3xl font-black italic">Settings Development In-Progress</div>}
       </main>
 
