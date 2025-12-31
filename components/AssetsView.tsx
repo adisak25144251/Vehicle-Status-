@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import * as XLSX from 'xlsx';
 import { Vehicle, ThemeType } from '../types';
 import { THEME_CONFIG } from '../constants';
 import { analyzeAssetRegistration } from '../services/geminiService';
@@ -35,6 +36,27 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploa
     }
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = ['หมายเลขทะเบียน', 'หน่วยงาน', 'ประเภท', 'ยี่ห้อ', 'สถานะ', 'ปีที่จัดซื้อ', 'มูลค่า', 'เลขเครื่อง'];
+    const sampleData = [
+       ['1กข-5678', 'ฝ่ายส่งกำลังบำรุง', 'รถกระบะ', 'Toyota', 'ใช้การได้', 2565, 850000, '2GD-8812'],
+       ['9ฮฮ-1122', 'กองกำกับการ 2', 'รถตู้', 'Nissan', 'ชำรุด', 2558, 1200000, 'YD2-9911'],
+       ['โล่ 99123', 'ศูนย์ฝึกอบรม', 'รถบรรทุก', 'Isuzu', 'รอจำหน่าย', 2550, 2500000, '6HK-1122'],
+       ['4กย-4455', 'สภ.เมือง', 'รถเก๋ง', 'Honda', 'ใช้การได้', 2566, 750000, 'L15-3344'],
+       ['2ขข-1111', 'หน่วยปฏิบัติการพิเศษ', 'รถจักรยานยนต์', 'Yamaha', 'ใช้การได้', 2564, 120000, 'G3B-5566']
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...sampleData]);
+    const wb = XLSX.utils.book_new();
+    
+    // Auto-width for columns
+    const wscols = headers.map(h => ({ wch: h.length + 5 }));
+    ws['!cols'] = wscols;
+
+    XLSX.utils.book_append_sheet(wb, ws, "Fleet_Template");
+    XLSX.writeFile(wb, "BPP_Fleet_Master_Template.xlsx");
+  };
+
   const copyResult = () => {
     if (analysisResult) {
       navigator.clipboard.writeText(analysisResult);
@@ -62,6 +84,21 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploa
         </div>
         
         <div className="flex flex-wrap justify-center gap-4 relative z-10">
+           <button 
+            onClick={handleDownloadTemplate}
+            className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 border
+              ${isColorful ? 'bg-white/5 text-white border-white/20 hover:bg-white/10' :
+                isExecutive ? 'bg-white/5 text-exec-gold border-white/20 hover:bg-white/10' :
+                isOcean ? 'bg-white/5 text-ocean-neon border-ocean-neon/30 hover:bg-white/10' :
+                isTactical ? 'bg-white/5 text-ops-green border-ops-green/30 hover:bg-white/10' : 
+                isInnovation ? 'bg-white/5 text-innovation-secondary border-innovation-secondary/30 hover:bg-white/10' :
+                'bg-white text-gray-700 border-gray-200'}
+            `}
+            title="ดาวน์โหลดไฟล์ตัวอย่าง Excel"
+          >
+            <i className="fas fa-file-arrow-down"></i> โหลด Template
+          </button>
+
           <button 
             onClick={onUploadClick}
             className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-xl

@@ -249,7 +249,7 @@ const App: React.FC = () => {
                <h1 className={`text-xl md:text-2xl font-bold tracking-tight ${styles.textClass}`}>
                  Border Patrol <span className={styles.primaryText}>Police Bureau</span>
                </h1>
-               <p className={`text-[10px] font-bold tracking-[0.2em] uppercase ${styles.secondaryText}`}>
+               <p className={`text-lg md:text-xl font-script mt-1 ${styles.secondaryText}`}>
                  Intelligent vehicle management system
                </p>
              </div>
