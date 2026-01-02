@@ -10,6 +10,7 @@ import { AnalyticsView } from './components/AnalyticsView';
 import { AssetsView } from './components/AssetsView';
 import { FileUploadModal } from './components/FileUploadModal';
 import { generateFleetInsight } from './services/geminiService';
+import { ToastContainer, ToastMessage } from './components/Toast';
 
 const App: React.FC = () => {
   // Application State
@@ -32,6 +33,46 @@ const App: React.FC = () => {
   const [insight, setInsight] = useState<string>("สรุปภาพรวมยานพาหนะมีอัตราความพร้อมปฏิบัติการ (Readiness Rate) เพียง 67% โดยมีรถที่อยู่ระหว่างซ่อมบำรุงและรอจำหน่ายรวมถึง 1 ใน 3 ของจำนวนทั้งหมด ซึ่งถือเป็นความเสี่ยงระดับสูงต่อการสนับสนุนภารกิจยุทธวิธีของหน่วยสายตรวจและปฏิบัติการพิเศษที่ต้องใช้ความคล่องตัวสูง ความบกพร่องด้านความพร้อมรบนี้สะท้อนถึงภาวะเสื่อมสภาพของสินทรัพย์มูลค่า 18.52 ล้านบาท ที่อาจกระทบต่อประสิทธิภาพการสนองตอบภารกิจป้องกันชายแดนในระยะยาว จึงขอเสนอให้เร่งรัดงบประมาณเพื่อการจัดหาทดแทน (Replacement) รถที่รอจำหน่ายโดยเร่งด่วน และเพิ่มงบประมาณซ่อมบำรุงเชิงป้องกัน (Preventive Maintenance) เพื่อรักษาเสถียรภาพของกำลังพลและยานพาหนะให้อยู่ในระดับมาตรฐานสูงสุด");
   const [isAiLoading, setIsAiLoading] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'ok' | 'missing'>('ok');
+  
+  // Toast State
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const addToast = useCallback((type: 'success' | 'error' | 'info', message: string) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, type, message }]);
+  }, []);
+  const removeToast = (id: string) => setToasts(prev => prev.filter(t => t.id !== id));
+
+  useEffect(() => {
+    // Check for API key presence safely
+    let hasKey = false;
+    
+    try {
+        // @ts-ignore
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            // @ts-ignore
+            if (import.meta.env.VITE_API_KEY || import.meta.env.API_KEY) {
+                hasKey = true;
+            }
+        }
+    } catch (e) {
+        // Ignore import.meta access errors
+    }
+
+    try {
+        if (!hasKey && typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+            hasKey = true;
+        }
+    } catch (e) {
+        // Ignore process access errors
+    }
+    
+    if (!hasKey) {
+        console.warn("API Key is missing from environment variables");
+        setApiKeyStatus('missing');
+        addToast('error', 'ไม่พบ API Key ในระบบ AI จะไม่ทำงาน');
+    }
+  }, [addToast]);
 
   // Save to localStorage whenever vehicles state changes (Safe Save)
   useEffect(() => {
@@ -49,7 +90,6 @@ const App: React.FC = () => {
   const [filterAgeMin, setFilterAgeMin] = useState<string>(''); 
   const [filterAgeMax, setFilterAgeMax] = useState<string>(''); 
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [searchFocused, setSearchFocused] = useState<boolean>(false);
 
   const styles = THEME_CONFIG[theme];
   const isInnovation = theme === ThemeType.INNOVATION;
@@ -66,7 +106,8 @@ const App: React.FC = () => {
     setFilterAgeMin('');
     setFilterAgeMax('');
     setSearchTerm('');
-  }, []);
+    addToast('info', 'ล้างตัวกรองทั้งหมดเรียบร้อยแล้ว');
+  }, [addToast]);
 
   const isAnyFilterActive = useMemo(() => {
     return filterDept !== 'All' || filterType !== 'All' || filterStatus !== 'All' || filterAgeMin !== '' || filterAgeMax !== '' || searchTerm !== '';
@@ -167,7 +208,6 @@ const App: React.FC = () => {
       }
     });
     
-    // Convert to array and filter out zero values to keep chart clean (optional, keeping all ensures consistent legend)
     return [
         { name: 'ไม่เกิน 5 ปี', value: groups['ไม่เกิน 5 ปี'] },
         { name: '6-10 ปี', value: groups['6-10 ปี'] },
@@ -197,15 +237,18 @@ const App: React.FC = () => {
   // Handlers
   const handleAiRefresh = useCallback(async () => {
     setIsAiLoading(true);
+    addToast('info', 'AI กำลังประมวลผลข้อมูลล่าสุด...');
     const result = await generateFleetInsight(filteredVehicles);
     setInsight(result);
     setIsAiLoading(false);
-  }, [filteredVehicles]);
+    addToast('success', 'วิเคราะห์ข้อมูลเสร็จสิ้น');
+  }, [filteredVehicles, addToast]);
 
   const handleUpload = (newVehicles: Vehicle[]) => {
     setVehicles(newVehicles);
-    clearAllFilters(); // Reset filters so new data is visible immediately
-    setCurrentView('dashboard'); // Switch to dashboard to show result
+    clearAllFilters(); 
+    setCurrentView('dashboard'); 
+    addToast('success', `นำเข้าข้อมูลสำเร็จ ${newVehicles.length} รายการ`);
   };
 
   const handleResetData = useCallback(() => {
@@ -213,12 +256,12 @@ const App: React.FC = () => {
       localStorage.removeItem('fleet_vehicles_data');
       setVehicles(MOCK_VEHICLES);
       clearAllFilters();
+      addToast('info', 'รีเซ็ตข้อมูลเป็นค่าเริ่มต้นแล้ว');
     }
-  }, [clearAllFilters]);
+  }, [clearAllFilters, addToast]);
 
   // Interactive Filter Handlers
   const handleAgeFilter = (ageLabel: string) => {
-    // Logic to set min/max based on the group label
     if (ageLabel === 'ไม่เกิน 5 ปี') { setFilterAgeMin('0'); setFilterAgeMax('5'); }
     else if (ageLabel === '6-10 ปี') { setFilterAgeMin('6'); setFilterAgeMax('10'); }
     else if (ageLabel === '11-15 ปี') { setFilterAgeMin('11'); setFilterAgeMax('15'); }
@@ -235,7 +278,8 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen transition-all duration-700 ease-in-out relative ${styles.bgClass} ${styles.font}`}>
-      {/* Background Overlays omitted for brevity - same as original */}
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       {/* Navbar */}
       <nav 
@@ -314,6 +358,14 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+        
+        {/* API Key Missing Warning Banner */}
+        {apiKeyStatus === 'missing' && (
+            <div className="bg-red-600 text-white text-xs font-bold text-center py-2 animate-pulse">
+                <i className="fas fa-exclamation-triangle mr-2"></i>
+                ไม่พบ API Key ในระบบ! ฟีเจอร์ AI จะไม่ทำงาน (กรุณาไปที่ Vercel -> Settings -> Environment Variables แล้วเพิ่ม VITE_API_KEY)
+            </div>
+        )}
       </nav>
 
       <main className="container mx-auto px-6 py-8 relative z-10">
@@ -359,7 +411,7 @@ const App: React.FC = () => {
               <KpiCard theme={theme} title="จำนวนรถทั้งหมด" value={metrics.totalCount} icon="fa-truck" trend="+2" trendUp={true} />
               <KpiCard theme={theme} title="อัตราความพร้อม" value={`${metrics.utilizationRate}%`} icon="fa-chart-line" trend="-5%" trendUp={false} />
               <KpiCard theme={theme} title="มูลค่าทรัพย์สินรวม" value={metrics.totalValue} icon="fa-coins" isCurrency={true} />
-              <div className={`${styles.cardClass} p-4 flex flex-col justify-center gap-2`}>
+              <div className={`${styles.cardClass} p-4 flex flex-col justify-center gap-2 relative overflow-hidden group hover:border-l-4 hover:border-l-current transition-all`}>
                  <h4 className={`text-xs font-bold uppercase tracking-widest opacity-80 ${styles.textClass}`}>สรุปสถานภาพ</h4>
                  <div className="flex justify-between items-center text-sm font-bold border-b border-white/10 pb-1">
                     <span className="text-green-400">ใช้การได้</span>
@@ -373,14 +425,16 @@ const App: React.FC = () => {
                     <span className="text-red-400">รอจำหน่าย</span>
                     <span className={styles.primaryText}>{metrics.disposalCount}</span>
                  </div>
+                 {/* Mini Chart BG Effect */}
+                 <div className={`absolute bottom-0 right-0 w-16 h-16 opacity-10 bg-gradient-to-t from-current to-transparent`}></div>
               </div>
             </div>
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 flex flex-col gap-6">
-                 {/* 1. สัดส่วนอายุการใช้งาน (Interactive) */}
-                 <div className={`${styles.cardClass} p-6 h-[480px] flex flex-col transition-all hover:border-current/30`}>
+                 {/* 1. สัดส่วนอายุการใช้งาน */}
+                 <div className={`${styles.cardClass} p-6 h-[480px] flex flex-col transition-all hover:shadow-2xl`}>
                     <h3 className={`${styles.primaryText} font-bold text-center mb-2 uppercase tracking-widest`}>
                         <i className="fas fa-history mr-2"></i>
                         สัดส่วนอายุการใช้งาน
@@ -391,8 +445,8 @@ const App: React.FC = () => {
                     <p className="text-[10px] text-center opacity-50 italic">คลิกที่ส่วนของวงกลมเพื่อกรองตามอายุ</p>
                  </div>
 
-                 {/* 3. สัดส่วนสถานภาพ (Interactive) */}
-                 <div className={`${styles.cardClass} p-6 h-[600px] flex flex-col transition-all hover:border-current/30`}>
+                 {/* 3. สัดส่วนสถานภาพ */}
+                 <div className={`${styles.cardClass} p-6 h-[600px] flex flex-col transition-all hover:shadow-2xl`}>
                     <h3 className={`${styles.primaryText} font-bold text-center mb-6 uppercase tracking-widest`}>สัดส่วนสถานภาพ</h3>
                     <div className="flex-1">
                         <StatusDonutChart data={statusData} theme={theme} onFilter={handleStatusFilter} />
@@ -402,18 +456,30 @@ const App: React.FC = () => {
               </div>
 
               <div className="lg:col-span-2 flex flex-col gap-6">
-                 {/* 2. สถานภาพตามหน่วยงาน (Interactive) */}
-                 <div className={`${styles.cardClass} p-6 h-[480px] transition-all hover:border-current/30`}>
+                 {/* 2. สถานภาพตามหน่วยงาน */}
+                 <div className={`${styles.cardClass} p-6 h-[480px] transition-all hover:shadow-2xl`}>
                     <h3 className={`${styles.primaryText} font-bold mb-4 uppercase tracking-wider`}>สถานภาพตามหน่วยงาน</h3>
                     <DepartmentBarChart data={departmentData} theme={theme} onFilter={handleDeptFilter} />
                     <p className="text-[10px] text-center opacity-50 italic">คลิกที่แท่งเพื่อกรองตามหน่วยงาน</p>
                  </div>
 
-                 {/* 4. รายการยานพาหนะ (Filtered Display) */}
+                 {/* 4. รายการยานพาหนะ */}
                  <div className={`${styles.cardClass} overflow-hidden h-[600px] flex flex-col shadow-2xl`}>
                     <div className="p-4 border-b border-white/10 shrink-0 flex justify-between items-center">
                        <h3 className={`${styles.primaryText} font-bold uppercase tracking-wide`}>รายการยานพาหนะ</h3>
-                       <span className="text-[10px] opacity-60">แสดง {filteredVehicles.length} จาก {vehicles.length} รายการ</span>
+                       <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-xs"></i>
+                                <input 
+                                    type="text" 
+                                    placeholder="ค้นหาทะเบียน/ยี่ห้อ..." 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className={`pl-8 pr-3 py-1 rounded-full text-xs bg-white/5 border border-white/10 focus:outline-none focus:border-white/30 text-white w-40 transition-all focus:w-56`}
+                                />
+                            </div>
+                            <span className="text-[10px] opacity-60">แสดง {filteredVehicles.length} คัน</span>
+                       </div>
                     </div>
                     <div className="overflow-x-auto flex-1 custom-scrollbar">
                        <table className="w-full text-left text-sm">
@@ -428,11 +494,11 @@ const App: React.FC = () => {
                           </thead>
                           <tbody className={`${styles.textClass} text-xs font-medium`}>
                              {filteredVehicles.map((v, i) => (
-                               <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                                  <td className="px-6 py-4 font-bold">{v.department}</td>
+                               <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                                  <td className="px-6 py-4 font-bold opacity-80 group-hover:opacity-100">{v.department}</td>
                                   <td className="px-6 py-4">{v.vehicle_type} ({v.brand})</td>
                                   <td className={`px-6 py-4 font-black ${styles.primaryText}`}>{v.plate_no}</td>
-                                  <td className="px-6 py-4 text-right">{v.asset_value.toLocaleString()}</td>
+                                  <td className="px-6 py-4 text-right font-mono opacity-80">{v.asset_value.toLocaleString()}</td>
                                   <td className="px-6 py-4">
                                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${v.condition_status === 'Active' ? 'bg-green-500/20 text-green-400' : v.condition_status === 'Maintenance' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
                                         {v.condition_status === 'Active' ? 'ใช้การได้' : v.condition_status === 'Maintenance' ? 'ชำรุด' : 'รอจำหน่าย'}

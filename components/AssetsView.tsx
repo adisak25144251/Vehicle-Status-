@@ -61,7 +61,8 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploa
   const copyResult = () => {
     if (analysisResult) {
       navigator.clipboard.writeText(analysisResult);
-      alert("คัดลอกรายงานผลการวิเคราะห์แล้ว");
+      // Removed window.alert to be handled by user awareness or parent toast if implemented fully, 
+      // but for now keeping it silent is better than ugly alert, or user sees the copy icon feedback
     }
   };
 
@@ -262,4 +263,3 @@ export const AssetsView: React.FC<AssetsViewProps> = ({ vehicles, theme, onUploa
     </div>
   );
 };
-    

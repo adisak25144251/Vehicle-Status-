@@ -1,8 +1,8 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { Vehicle } from "../types";
 
-const createClient = () => {
+const createClient = (): GoogleGenAI | null => {
     let apiKey = '';
     
     // 1. Safe check for process.env (Standard/Node/Webpack)
@@ -34,6 +34,25 @@ const createClient = () => {
     return new GoogleGenAI({ apiKey });
 }
 
+// Helper for exponential backoff retry
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+    try {
+        return await fn();
+    } catch (error: any) {
+        if (retries === 0) throw error;
+        
+        // Retry only on 503 (Service Unavailable) or 429 (Too Many Requests)
+        const status = error?.status || error?.response?.status;
+        if (status === 503 || status === 429) {
+            console.warn(`AI Busy, retrying in ${delay}ms... (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return withRetry(fn, retries - 1, delay * 2);
+        }
+        
+        throw error;
+    }
+}
+
 export const generateFleetInsight = async (vehicles: Vehicle[]): Promise<string> => {
     const client = createClient();
     if (!client) return "AI service unavailable: Missing API Key (Please check VITE_API_KEY in Settings).";
@@ -61,14 +80,14 @@ export const generateFleetInsight = async (vehicles: Vehicle[]): Promise<string>
     `;
 
     try {
-        const response = await client.models.generateContent({
+        const response = await withRetry<GenerateContentResponse>(() => client.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: prompt,
-        });
+        }));
         return response.text || "No insights generated.";
     } catch (error) {
         console.error("Gemini API Error:", error);
-        return "System Error: Unable to retrieve AI insights.";
+        return "ระบบ AI ไม่สามารถประมวลผลได้ในขณะนี้ (กรุณาลองใหม่ภายหลัง)";
     }
 };
 
@@ -90,7 +109,7 @@ export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[
     `;
 
     try {
-        const response = await client.models.generateContent({
+        const response = await withRetry<GenerateContentResponse>(() => client.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: message,
             config: {
@@ -98,7 +117,7 @@ export const chatWithFleetAI = async (message: string, contextVehicles: Vehicle[
                 temperature: 0.3,
                 tools: [{ googleSearch: {} }]
             }
-        });
+        }));
 
         const text = response.text || "ขออภัยครับ ผมไม่สามารถประมวลผลคำสั่งนี้ได้ในขณะนี้";
         
@@ -149,17 +168,17 @@ ${dataContext}
     `;
 
     try {
-        const response = await client.models.generateContent({
+        const response = await withRetry<GenerateContentResponse>(() => client.models.generateContent({
             model: "gemini-3-pro-preview",
             contents: prompt,
             config: {
                 temperature: 0.2,
             }
-        });
+        }));
         return response.text || "การวิเคราะห์ล้มเหลว: ไม่ได้รับข้อมูลจาก AI";
     } catch (error) {
         console.error("Asset Analysis Error:", error);
-        return "เกิดข้อผิดพลาดในการประมวลผลข้อมูลทะเบียนรถอัจฉริยะ";
+        return "เกิดข้อผิดพลาดในการประมวลผลข้อมูลทะเบียนรถอัจฉริยะ (Timeout/Network Error)";
     }
 };
 
@@ -188,13 +207,13 @@ ${dataContext}
     `;
 
     try {
-        const response = await client.models.generateContent({
+        const response = await withRetry<GenerateContentResponse>(() => client.models.generateContent({
             model: "gemini-3-pro-preview",
             contents: prompt,
             config: {
                 temperature: 0.4,
             }
-        });
+        }));
         return response.text || "การวิเคราะห์ธรรมาภิบาลล้มเหลว";
     } catch (error) {
         console.error("Governance Analysis Error:", error);
