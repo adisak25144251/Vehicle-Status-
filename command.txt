@@ -1,0 +1,13 @@
+git remote set-url origin https://github.com/adisak25144251/Vehicle-Status-.git
+git remote -v
+git status
+git add .
+git commit -m "update"
+git push
+cd path/to/Vehicle-Status-
+git init
+git branch -M main
+git remote add origin https://github.com/adisak25144251/Vehicle-Status-.git
+git add .
+git commit -m "init"
+git push -u origin main
